@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { analyzeImage, getProjectDetails } from "../services/api";
 import ReactMarkdown from "react-markdown";
-import { ClipLoader } from "react-spinners";
 import {
   Box,
   Button,
@@ -19,9 +18,9 @@ import {
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [description, setDescription] = useState<string>("");
+  const [components, setComponents] = useState<string[]>([]);
   const [projectIdeas, setProjectIdeas] = useState<string[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [tutorial, setTutorial] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -36,20 +35,26 @@ const FileUpload: React.FC = () => {
     if (file) {
       setLoading(true);
       const data = await analyzeImage(file);
-      setDescription(data.project_ideas[0]); // Assuming the first item is the description
-      const cleanedData = data.project_ideas
-        .slice(1)
-        .filter((idea: string) => idea.trim() !== "");
-      setProjectIdeas(cleanedData);
+      console.log("Project Ideas Response: ", data);
+
+      // Extract components from the response
+      const componentsData = data.components;
+
+      // Extract project ideas from the response
+      const projectIdeasData = data.project_ideas;
+
+      setComponents(componentsData);
+      setProjectIdeas(projectIdeasData);
       setLoading(false);
     }
   };
-
   const handleGetProjectDetails = async () => {
-    if (file && selectedProject) {
+    if (file && selectedProject !== null) {
       setLoading(true);
-      const data = await getProjectDetails(file, selectedProject);
-      setTutorial(data.tutorial);
+      setTutorial(""); // Reset tutorial before starting
+      await getProjectDetails(file, selectedProject, (data) => {
+        setTutorial((prev) => prev + data); // Append new data to the tutorial
+      });
       setLoading(false);
     }
   };
@@ -83,11 +88,17 @@ const FileUpload: React.FC = () => {
             </Box>
           )}
           <Box mt={4}>
-            {description && (
+            {components.length > 0 && (
               <Card variant="outlined" sx={{ mb: 4 }}>
                 <CardContent>
-                  <Typography variant="h6">Project Description</Typography>
-                  <ReactMarkdown>{description}</ReactMarkdown>
+                  <Typography variant="h6">Components</Typography>
+                  <List>
+                    {components.map((component, index) => (
+                      <ListItem key={index}>
+                        <ListItemText primary={component} />
+                      </ListItem>
+                    ))}
+                  </List>
                 </CardContent>
               </Card>
             )}
@@ -101,7 +112,7 @@ const FileUpload: React.FC = () => {
                     <React.Fragment key={index}>
                       <ListItem
                         button
-                        onClick={() => setSelectedProject(idea)}
+                        onClick={() => setSelectedProject(idea)} // Set the project string
                         selected={selectedProject === idea}
                       >
                         <ListItemText

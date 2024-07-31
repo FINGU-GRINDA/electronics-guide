@@ -1,20 +1,28 @@
-from fastapi import APIRouter, UploadFile, File, Form
-from app.services.image_service import analyze_image, provide_project_details
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
+from app.services.image_service import analyze_image, provide_project_details_service
 from app.models.image import ImageAnalysisResponse, ProjectDetailsResponse
-from app.workflows.image_workflow import handle_image_upload
+from typing import Generator
 
 router = APIRouter()
 
 @router.post("/analyze_image/", response_model=ImageAnalysisResponse)
 async def analyze_image_endpoint(file: UploadFile = File(...)):
     image_data = await file.read()
-    return analyze_image(image_data)
+    response = analyze_image(image_data)
+    print(f"Response to client: {response}")
+    if not response.project_ideas:
+        raise HTTPException(status_code=500, detail="Failed to generate project ideas")
+    return response
 
 @router.post("/project_details/", response_model=ProjectDetailsResponse)
-async def project_details_endpoint(file: UploadFile = File(...), project: str = Form(...)):
-    image_data = await file.read()
-    return provide_project_details(project, image_data)
+async def project_details_endpoint(project: str = Form(...)):
+    def project_details_generator() -> Generator[str, None, None]:
+        for step in provide_project_details_service(project):
+            if isinstance(step, dict):
+                yield str(step)
+            else:
+                yield step
+            yield "\n\n"
 
-@router.post("/workflow/")
-async def workflow_endpoint(file: UploadFile = File(...)):
-    return await handle_image_upload(file)
+    return StreamingResponse(project_details_generator(), media_type="text/plain")
