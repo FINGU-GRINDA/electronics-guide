@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "electronic-project-backend"
+version = "0.1.0"
+description = "Backend for Electronics Project Generator"
+authors = ["Your Name"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.111.1"
+pydantic = "^2.8.2"
+python-multipart = "^0.0.9"
+aiofiles = "^24.1.0"
+langgraph = "^0.1.17"
+llama-index = "^0.10.58"
+langchain = "^0.2.11"
+google-generativeai = ">=0.3.0"
+matplotlib = "^3.9.1"
+qdrant-client = "^1.10.1"
+llama-index-multi-modal-llms-openai = "^0.1.8"
+llama-index-multi-modal-llms-gemini = "^0.1.7"
+llama-index-llms-gemini = "^0.1.11"
+langchain-community = "^0.2.10"
+fastapi-cors = "^0.0.6"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+uvicorn = "^0.30.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
