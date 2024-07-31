@@ -2,6 +2,20 @@ import React, { useState } from "react";
 import { analyzeImage, getProjectDetails } from "../services/api";
 import ReactMarkdown from "react-markdown";
 import { ClipLoader } from "react-spinners";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Input,
+  Typography,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+} from "@mui/material";
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -41,69 +55,92 @@ const FileUpload: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-3xl mx-auto bg-white rounded-lg shadow-md">
-      <form onSubmit={handleAnalyzeImage} className="mb-4">
-        <div className="mb-4">
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="p-2 border border-gray-300 rounded w-full"
-          />
-        </div>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Upload
-        </button>
-      </form>
-      {loading && (
-        <div className="mt-4 flex justify-center">
-          <ClipLoader color="#4A90E2" />
-        </div>
-      )}
-      <div className="mt-4">
-        {description && (
-          <div className="p-4 mb-4 border border-gray-300 rounded bg-gray-50">
-            <ReactMarkdown>{description}</ReactMarkdown>
-          </div>
-        )}
-        {projectIdeas.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">
-              Project Ideas
-            </h2>
-            <div className="space-y-4">
-              {projectIdeas.map((idea, index) => (
-                <div
-                  key={index}
-                  className="cursor-pointer p-4 border border-gray-300 rounded hover:bg-gray-100"
-                  onClick={() => setSelectedProject(idea)}
-                >
-                  <ReactMarkdown>{idea}</ReactMarkdown>
-                </div>
-              ))}
-            </div>
-            {selectedProject && (
-              <button
-                onClick={handleGetProjectDetails}
-                className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Get Project Details
-              </button>
+    <Container maxWidth="md">
+      <Card variant="outlined" sx={{ mt: 4, p: 2 }}>
+        <CardContent>
+          <form onSubmit={handleAnalyzeImage}>
+            <Box mb={2}>
+              <Input
+                type="file"
+                onChange={handleFileChange}
+                fullWidth
+                disableUnderline
+              />
+            </Box>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={!file}
+            >
+              Upload
+            </Button>
+          </form>
+          {loading && (
+            <Box display="flex" justifyContent="center" mt={2}>
+              <CircularProgress />
+            </Box>
+          )}
+          <Box mt={4}>
+            {description && (
+              <Card variant="outlined" sx={{ mb: 4 }}>
+                <CardContent>
+                  <Typography variant="h6">Project Description</Typography>
+                  <ReactMarkdown>{description}</ReactMarkdown>
+                </CardContent>
+              </Card>
             )}
-          </div>
-        )}
-      </div>
-      <div className="mt-4">
-        {tutorial && (
-          <div className="p-4 border rounded bg-gray-50 shadow-lg">
-            <h2 className="text-2xl font-bold mb-4">Project Tutorial</h2>
-            <ReactMarkdown className="prose">{tutorial}</ReactMarkdown>
-          </div>
-        )}
-      </div>
-    </div>
+            {projectIdeas.length > 0 && (
+              <Box>
+                <Typography variant="h5" gutterBottom>
+                  Project Ideas
+                </Typography>
+                <List>
+                  {projectIdeas.map((idea, index) => (
+                    <React.Fragment key={index}>
+                      <ListItem
+                        button
+                        onClick={() => setSelectedProject(idea)}
+                        selected={selectedProject === idea}
+                      >
+                        <ListItemText
+                          primary={<ReactMarkdown>{idea}</ReactMarkdown>}
+                        />
+                      </ListItem>
+                      {index < projectIdeas.length - 1 && <Divider />}
+                    </React.Fragment>
+                  ))}
+                </List>
+                {selectedProject && (
+                  <Button
+                    onClick={handleGetProjectDetails}
+                    variant="contained"
+                    color="secondary"
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    Get Project Details
+                  </Button>
+                )}
+              </Box>
+            )}
+          </Box>
+          <Box mt={4}>
+            {tutorial && (
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Project Tutorial
+                  </Typography>
+                  <ReactMarkdown className="prose">{tutorial}</ReactMarkdown>
+                </CardContent>
+              </Card>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
+    </Container>
   );
 };
 
