@@ -1,4 +1,3 @@
-
 # Electronics Project Generator
 
 ## Project Overview
@@ -8,13 +7,16 @@ Welcome to the Electronics Project Generator! This project is designed to assist
 ## Core Features
 
 ### Image Analysis
+
 - **Capture an image of electronic parts**: Simply upload a photo of your electronic components (e.g., Arduino, sensors).
 - **Identify and list parts**: Our LLM processes the image to recognize and list the components.
 
 ### Project Suggestion
+
 - **Receive project ideas**: Based on the identified parts, the system suggests 3-4 project ideas.
 
 ### Interactive Tutorial
+
 - **Step-by-step guidance**: Once a project is selected, the system provides a detailed tutorial to guide users through the creation process.
 - **User-friendly instructions**: The instructions are tailored to be easily understood by the average user.
 - **Visual aids**: The tutorial includes images to enhance comprehension and facilitate the building process.
@@ -22,15 +24,19 @@ Welcome to the Electronics Project Generator! This project is designed to assist
 ## Technology Stack
 
 ### LangGraph
+
 - **Multi-agent orchestration**: Ensures smooth interaction between different components of the system.
 
 ### LLM (Language Model)
+
 - **Component identification and project generation**: Utilizes advanced language models to identify parts and generate project steps.
 
 ### Gemini API
+
 - **Integration at various stages**: Enhances image recognition, project suggestions, and instruction generation.
 
 ### Image Processing Tools
+
 - **Electronic parts analysis**: Employs image processing techniques to accurately recognize electronic components from images.
 
 ## Workflow
@@ -67,20 +73,23 @@ Welcome to the Electronics Project Generator! This project is designed to assist
 ### Installation
 
 1. **Clone the repository**:
+
    ```bash
-   git clone https://github.com/your-username/your-repository.git
+   git clone https://github.com/FINGU-GRINDA/electronics-guide.git
    cd your-repository
    ```
 
 2. **Install dependencies**:
 
    **For the backend**:
+
    ```bash
    cd server
    poetry install
    ```
 
    **For the frontend**:
+
    ```bash
    cd client
    npm install
@@ -92,11 +101,13 @@ Welcome to the Electronics Project Generator! This project is designed to assist
 4. **Run the development server**:
 
    **For the backend**:
+
    ```bash
    poetry run uvicorn app.main:app --reload
    ```
 
    **For the frontend**:
+
    ```bash
    npm start
    ```

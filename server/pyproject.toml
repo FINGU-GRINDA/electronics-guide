@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Backend for Electronics Project Generator"
 authors = ["Your Name"]
 readme = "README.md"
+packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -30,3 +31,8 @@ uvicorn = "^0.30.3"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+lint = "scripts.index:lint"
+lint_fix = "scripts.index:lint_fix"
+start = "scripts.index:start"
