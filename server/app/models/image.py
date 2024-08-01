@@ -1,10 +1,9 @@
 from pydantic import BaseModel
-
-class ImageAnalysisRequest(BaseModel):
-    file: bytes
+from typing import List
 
 class ImageAnalysisResponse(BaseModel):
-    project_ideas: list[str]
+    components: List[str]
+    project_ideas: List[str]
 
 class ProjectDetailsResponse(BaseModel):
-    tutorial: str
+    content: str
