@@ -1,5 +1,9 @@
-import React, { useState } from "react";
-import { analyzeImage, getProjectDetails } from "../services/api";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  analyzeImage,
+  getProjectDetails,
+  downloadTutorialPdf,
+} from "../services/api";
 import ReactMarkdown from "react-markdown";
 import {
   Box,
@@ -15,6 +19,9 @@ import {
   ListItemText,
   Divider,
 } from "@mui/material";
+import { Worker, Viewer } from "@react-pdf-viewer/core";
+import "@react-pdf-viewer/core/lib/styles/index.css";
+import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -23,6 +30,8 @@ const FileUpload: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [tutorial, setTutorial] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const pdfBlobUrlRef = useRef<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -48,6 +57,7 @@ const FileUpload: React.FC = () => {
       setLoading(false);
     }
   };
+
   const handleGetProjectDetails = async () => {
     if (file && selectedProject !== null) {
       setLoading(true);
@@ -56,8 +66,27 @@ const FileUpload: React.FC = () => {
         setTutorial((prev) => prev + data); // Append new data to the tutorial
       });
       setLoading(false);
+      // Fetch the PDF file
+      const pdfData = await downloadTutorialPdf();
+      console.log("PDF Blob:", pdfData);
+      setPdfBlob(pdfData);
     }
   };
+
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+
+  useEffect(() => {
+    if (pdfBlob) {
+      // Revoke the previous object URL to avoid memory leaks
+      if (pdfBlobUrlRef.current) {
+        URL.revokeObjectURL(pdfBlobUrlRef.current);
+      }
+      pdfBlobUrlRef.current = URL.createObjectURL(pdfBlob);
+      console.log("PDF Blob URL:", pdfBlobUrlRef.current);
+    }
+  }, [pdfBlob]);
+
+  const pdfUrl = useMemo(() => pdfBlobUrlRef.current, [pdfBlob]);
 
   return (
     <Container maxWidth="md">
@@ -147,6 +176,18 @@ const FileUpload: React.FC = () => {
                   <ReactMarkdown className="prose">{tutorial}</ReactMarkdown>
                 </CardContent>
               </Card>
+            )}
+            {pdfUrl && (
+              <div>
+                <Worker
+                  workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}
+                >
+                  <Viewer
+                    fileUrl={pdfUrl}
+                    plugins={[defaultLayoutPluginInstance]}
+                  />
+                </Worker>
+              </div>
             )}
           </Box>
         </CardContent>

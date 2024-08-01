@@ -14,6 +14,7 @@ export const analyzeImage = async (file: File) => {
 
   return response.data;
 };
+
 export const getProjectDetails = async (
   file: File,
   project: string,
@@ -48,4 +49,14 @@ export const getProjectDetails = async (
   }
 
   return result;
+};
+
+export const downloadTutorialPdf = async () => {
+  const response = await axios.get(
+    "http://localhost:8000/api/v1/download_tutorial/",
+    {
+      responseType: "blob",
+    }
+  );
+  return response.data;
 };

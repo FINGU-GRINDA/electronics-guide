@@ -23,6 +23,11 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+.customViewer {
+  width: 100%;
+  height: 600px;
+  border: 1px solid #ccc;
+}
 
 .App-link {
   color: #61dafb;
