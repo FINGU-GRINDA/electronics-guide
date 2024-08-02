@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import image_analysis
+from app.api.routes import image_analysis,tutorial_generate
 from app.core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -15,3 +15,4 @@ app.add_middleware(
 )
 
 app.include_router(image_analysis.router, prefix=settings.API_V1_STR)
+app.include_router(tutorial_generate.router, prefix=settings.API_V1_STR)

@@ -18,7 +18,7 @@ export const analyzeImage = async (file: File) => {
 export const getProjectDetails = async (
   file: File,
   project: string,
-  onData: (data: string) => void
+  onData: (data: string, type: string) => void
 ) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -39,13 +39,24 @@ export const getProjectDetails = async (
   const reader = response.body.getReader();
   const decoder = new TextDecoder("utf-8");
   let result = "";
+  let isJSON = true;
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     const chunk = decoder.decode(value, { stream: true });
     result += chunk;
-    onData(result);
+
+    // Check if the result is valid JSON
+    if (isJSON) {
+      try {
+        JSON.parse(result);
+      } catch (e) {
+        isJSON = false;
+      }
+    }
+
+    onData(result, isJSON ? "json" : "html");
   }
 
   return result;

@@ -2,7 +2,7 @@ from typing import TypedDict
 
 from fastapi import UploadFile
 from fastapi.encoders import jsonable_encoder
-from app.services.image_service import analyze_image, provide_project_details
+from app.services.tutorial_service import analyze_image, provide_project_details
 from langgraph.graph import StateGraph, END
 
 

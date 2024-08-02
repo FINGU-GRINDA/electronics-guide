@@ -1,9 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import {
-  analyzeImage,
-  getProjectDetails,
-  downloadTutorialPdf,
-} from "../services/api";
+import React, { useState } from "react";
+import { analyzeImage, getProjectDetails } from "../services/api";
 import ReactMarkdown from "react-markdown";
 import {
   Box,
@@ -19,19 +15,16 @@ import {
   ListItemText,
   Divider,
 } from "@mui/material";
-import { Worker, Viewer } from "@react-pdf-viewer/core";
-import "@react-pdf-viewer/core/lib/styles/index.css";
-import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [components, setComponents] = useState<string[]>([]);
   const [projectIdeas, setProjectIdeas] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [tutorial, setTutorial] = useState<string>("");
+  const [projectOverview, setProjectOverview] = useState<string>("");
+  const [geminiTutorial, setGeminiTutorial] = useState<string>("");
+  const [htmlContent, setHtmlContent] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const pdfBlobUrlRef = useRef<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -61,32 +54,32 @@ const FileUpload: React.FC = () => {
   const handleGetProjectDetails = async () => {
     if (file && selectedProject !== null) {
       setLoading(true);
-      setTutorial(""); // Reset tutorial before starting
-      await getProjectDetails(file, selectedProject, (data) => {
-        setTutorial((prev) => prev + data); // Append new data to the tutorial
+      setProjectOverview(""); // Reset project overview before starting
+      setGeminiTutorial(""); // Reset Gemini tutorial before starting
+      setHtmlContent(""); // Reset HTML content before starting
+
+      await getProjectDetails(file, selectedProject, (data, type) => {
+        if (type === "json") {
+          const parsedData = JSON.parse(data);
+          setProjectOverview(parsedData.project_details.project_overview);
+          setGeminiTutorial(parsedData.project_details.gemini_tutorial);
+        } else {
+          // Extract JSON from the HTML response if needed
+          try {
+            const jsonStart = data.indexOf("{");
+            const jsonEnd = data.lastIndexOf("}") + 1;
+            const jsonString = data.substring(jsonStart, jsonEnd);
+            const parsedData = JSON.parse(jsonString);
+            setProjectOverview(parsedData.project_details.project_overview);
+            setGeminiTutorial(parsedData.project_details.gemini_tutorial);
+          } catch (e) {
+            setHtmlContent(data);
+          }
+        }
       });
       setLoading(false);
-      // Fetch the PDF file
-      const pdfData = await downloadTutorialPdf();
-      console.log("PDF Blob:", pdfData);
-      setPdfBlob(pdfData);
     }
   };
-
-  const defaultLayoutPluginInstance = defaultLayoutPlugin();
-
-  useEffect(() => {
-    if (pdfBlob) {
-      // Revoke the previous object URL to avoid memory leaks
-      if (pdfBlobUrlRef.current) {
-        URL.revokeObjectURL(pdfBlobUrlRef.current);
-      }
-      pdfBlobUrlRef.current = URL.createObjectURL(pdfBlob);
-      console.log("PDF Blob URL:", pdfBlobUrlRef.current);
-    }
-  }, [pdfBlob]);
-
-  const pdfUrl = useMemo(() => pdfBlobUrlRef.current, [pdfBlob]);
 
   return (
     <Container maxWidth="md">
@@ -167,27 +160,42 @@ const FileUpload: React.FC = () => {
             )}
           </Box>
           <Box mt={4}>
-            {tutorial && (
+            {(projectOverview || geminiTutorial || htmlContent) && (
               <Card variant="outlined">
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     Project Tutorial
                   </Typography>
-                  <ReactMarkdown className="prose">{tutorial}</ReactMarkdown>
+                  {projectOverview && (
+                    <>
+                      <Typography variant="subtitle1" gutterBottom>
+                        Project Overview
+                      </Typography>
+                      <ReactMarkdown className="prose">
+                        {projectOverview}
+                      </ReactMarkdown>
+                    </>
+                  )}
+                  {geminiTutorial && (
+                    <>
+                      <Typography variant="subtitle1" gutterBottom>
+                        Gemini Tutorial
+                      </Typography>
+                      <ReactMarkdown className="prose">
+                        {geminiTutorial}
+                      </ReactMarkdown>
+                    </>
+                  )}
+                  {htmlContent && (
+                    <>
+                      <Typography variant="subtitle1" gutterBottom>
+                        HTML Content
+                      </Typography>
+                      <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                    </>
+                  )}
                 </CardContent>
               </Card>
-            )}
-            {pdfUrl && (
-              <div>
-                <Worker
-                  workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}
-                >
-                  <Viewer
-                    fileUrl={pdfUrl}
-                    plugins={[defaultLayoutPluginInstance]}
-                  />
-                </Worker>
-              </div>
             )}
           </Box>
         </CardContent>
