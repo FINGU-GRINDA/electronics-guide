@@ -1,3 +1,4 @@
+import asyncio
 import os
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, FileResponse
@@ -6,14 +7,24 @@ from app.services.ideas_service import analyze_image, save_image_to_temp_file
 from app.models.image import ProjectOverviewResponse, SectionContentResponse, FullTutorialResponse
 from typing import Generator
 
-router = APIRouter()
+from pydantic import BaseModel
 
-@router.post("/project_details/", response_model=Generator[SectionContentResponse, None, None])
+router = APIRouter()
+class SectionContentResponse(BaseModel):
+    section: str
+    content: str
+@router.post("/project_details/")
 async def project_details_endpoint(project: str = Form(...), file: UploadFile = File(...)):
     image_data = await file.read()
     image_path = save_image_to_temp_file(image_data)
 
-    return StreamingResponse(provide_project_details_service(project, image_path), media_type="application/json")
+    async def generate():
+        for section_json in provide_project_details_service(project, image_path):
+            yield f"{section_json}\n"
+            await asyncio.sleep(0.1)  # Small delay to prevent overwhelming the client
+
+    return StreamingResponse(generate(), media_type="application/x-ndjson")
+
 
 @router.get("/download_tutorial/")
 async def download_tutorial():

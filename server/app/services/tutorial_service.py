@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Generator, TypedDict, Any
+from typing import Dict, Generator, Optional, TypedDict, Any
 from llama_index.multi_modal_llms.gemini import GeminiMultiModal
 from llama_index.core.schema import ImageDocument
 from langgraph.graph import StateGraph, END
@@ -11,15 +11,23 @@ from jinja2 import Template
 import base64
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, FileResponse
+from pydantic import BaseModel
 
 from ..core.config import settings  # Import the settings object
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-
 # Initialize models
 mm_llm = GeminiMultiModal(model_name="models/gemini-1.5-flash-latest", temperature=0.7, api_key=settings.GOOGLE_API_KEY)
+class GraphState(BaseModel):
+    image_path: str
+    project_ideas: str
+    selected_project: str
+    project_overview: str
+    gemini_tutorial: str
+    current_section: Optional[str] = None
+    section_content: Optional[str] = None
 
 # Function to encode image to base64
 def encode_image(image_path):
@@ -44,8 +52,9 @@ def provide_project_details(project: str, image_path: str) -> str:
 
 # Agent 3: Gemini Tutorial Generator
 
+
 # Update the generator function to yield each section
-def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> Generator[str, None, None]:
+def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> Generator[Dict[str, str], None, None]:
     image_doc = ImageDocument(image_path=image_path)
     sections = [
         "1. Introduction to the project",
@@ -58,8 +67,6 @@ def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> Ge
         "8. Conclusion"
     ]
 
-    full_tutorial = f"# {project}\n\n"
-
     for section in sections:
         prompt = f"""Based on the following project and overview, generate content for this section of the tutorial:
 
@@ -69,53 +76,49 @@ def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> Ge
         Section: {section}
 
         Provide detailed explanations and keep the response under 1000 words.
-        If this section involves code, provide a detailed code example with comments. the code should be completed not half one."""
+        If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done."""
 
         response = mm_llm.complete(prompt=prompt, image_documents=[image_doc])
         content = response.text
 
-        full_tutorial += f"\n\n## {section}\n\n{content}"
         yield {
             "section": section,
             "content": content
         }
 
-    yield full_tutorial
+def project_details_node(state: GraphState) -> GraphState:
+    state.project_overview = provide_project_details(state.selected_project, state.image_path)
+    logger.debug(f"Project overview generated in node: {state.project_overview}")
+    return state
 
+def gemini_tutorial_generation_node(state: GraphState) -> Generator[GraphState, None, GraphState]:
+    for part in generate_gemini_tutorial(state.selected_project, state.project_overview, state.image_path):
+        state.current_section = part["section"]
+        state.section_content = part["content"]
+        yield state
 
-class GraphState(TypedDict):
-    image_path: str
-    project_ideas: str
-    selected_project: str
-    project_overview: str
-    gemini_tutorial: str
+    state.gemini_tutorial = "Tutorial generation completed"
+    yield state
 
 
 def define_guide_workflow() -> StateGraph:
     workflow = StateGraph(GraphState)
 
-    # Node 3: Project Implementation Details
-    def project_details_node(state: GraphState) -> GraphState:
-        state["project_overview"] = provide_project_details(state["selected_project"], state["image_path"])
-        print("Project overview generated.")
-        return state
+    workflow.add_node("project_details", project_details_node)
+    workflow.add_node("gemini_tutorial_generation", gemini_tutorial_generation_node)
+    workflow.set_entry_point("project_details")
 
-    # Node 4: Gemini Tutorial Generation
-    # Update the gemini_tutorial_generation_node to stream each section
-    def gemini_tutorial_generation_node(state: Dict[str, Any]) -> Generator[Dict[str, Any], None, Dict[str, Any]]:
-        for part in generate_gemini_tutorial(state["selected_project"], state["project_overview"], state["image_path"]):
-            if isinstance(part, dict):
-                yield {
-                    "current_section": part["section"],
-                    "section_content": part["content"]
-                }
-            else:
-                # This is the full tutorial, which we don't need to yield
-                state["gemini_tutorial"] = part
-        
-        yield state
-
+    workflow.add_edge("project_details", "gemini_tutorial_generation")
+    workflow.add_edge("gemini_tutorial_generation", END)
     
+    return workflow
+
+
+def define_guide_workflow() -> StateGraph:
+    workflow = StateGraph(GraphState)
+
+
+
     workflow.add_node("project_details", project_details_node)
     workflow.add_node("gemini_tutorial_generation", gemini_tutorial_generation_node)
     workflow.set_entry_point("project_details")
@@ -123,8 +126,6 @@ def define_guide_workflow() -> StateGraph:
     workflow.add_edge("project_details", "gemini_tutorial_generation")
     workflow.add_edge("gemini_tutorial_generation", END)
     return workflow
-
-
 def provide_project_details_service(project: str, image_path: str) -> Generator[str, None, None]:
     initial_state = GraphState(
         image_path=image_path,
@@ -137,12 +138,21 @@ def provide_project_details_service(project: str, image_path: str) -> Generator[
     workflow = define_guide_workflow().compile()
 
     for step, state in enumerate(workflow.stream(initial_state)):
-        if step == 0:
- # Assuming the state contains project details under the key "project_details"
-            project_details = state["project_details"]
-            state["project_overview"] = project_details  # Update the project overview with the details
+        state_dict = dict(state)  # Ensure state is treated as a dictionary
+        logger.debug(f"Step {step} state: {state_dict}")
 
-            section_content = json.dumps({"project_overview": project_details}, indent=2)
-        else:
-            section_content = json.dumps({"section_content": state.get('gemini_tutorial_generation', '')}, indent=2)
-        yield section_content
+        if step != 0:
+            if "gemini_tutorial_generation" not in state_dict or "current_section" not in state_dict["gemini_tutorial_generation"]:
+                raise KeyError("current_section or section_content not found in state['gemini_tutorial_generation']")
+            current_section = state_dict["gemini_tutorial_generation"]["current_section"]
+            section_content_data = state_dict["gemini_tutorial_generation"]["section_content"]
+            logger.debug(f"Step {step}: Current section: {current_section}, Section content: {section_content_data}")
+            section_content = json.dumps({
+                "current_section": current_section,
+                "section_content": section_content_data
+            }, indent=2)
+            yield section_content  # Yield each section's content as you generate it
+
+            # Check if this is the last state
+            if state_dict["gemini_tutorial_generation"]["gemini_tutorial"] == "Tutorial generation completed":
+                break
