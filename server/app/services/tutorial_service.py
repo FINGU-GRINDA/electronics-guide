@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Generator, Optional, TypedDict, Any
+from typing import Dict, AsyncGenerator, Generator, Optional
 from llama_index.multi_modal_llms.gemini import GeminiMultiModal
 from llama_index.core.schema import ImageDocument
 from langgraph.graph import StateGraph, END
@@ -12,7 +12,6 @@ import base64
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
-
 from ..core.config import settings  # Import the settings object
 
 logging.basicConfig(level=logging.DEBUG)
@@ -20,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize models
 mm_llm = GeminiMultiModal(model_name="models/gemini-1.5-flash-latest", temperature=0.7, api_key=settings.GOOGLE_API_KEY)
+
 class GraphState(BaseModel):
     image_path: str
     project_ideas: str
@@ -35,10 +35,10 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 # Agent 2: Project Implementation Details
-def provide_project_details(project: str, image_path: str) -> str:
+async def provide_project_details(project: str, image_path: str) -> str:
     print(f"Generating tutorial for project: {project}")
     image_doc = ImageDocument(image_path=image_path)
-    response = mm_llm.complete(
+    response = await mm_llm.acomplete(
         prompt=f"""Provide a brief overview of how to implement this electronic project: {project}
         Include:
         1. A list of main components needed
@@ -51,10 +51,7 @@ def provide_project_details(project: str, image_path: str) -> str:
     return response.text
 
 # Agent 3: Gemini Tutorial Generator
-
-
-# Update the generator function to yield each section
-def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> Generator[Dict[str, str], None, None]:
+async def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> AsyncGenerator[Dict[str, str], None]:
     image_doc = ImageDocument(image_path=image_path)
     sections = [
         "1. Introduction to the project",
@@ -78,7 +75,7 @@ def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> Ge
         Provide detailed explanations and keep the response under 1000 words.
         If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done."""
 
-        response = mm_llm.complete(prompt=prompt, image_documents=[image_doc])
+        response = await mm_llm.acomplete(prompt=prompt, image_documents=[image_doc])
         content = response.text
 
         yield {
@@ -86,20 +83,19 @@ def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> Ge
             "content": content
         }
 
-def project_details_node(state: GraphState) -> GraphState:
-    state.project_overview = provide_project_details(state.selected_project, state.image_path)
+async def project_details_node(state: GraphState) -> GraphState:
+    state.project_overview = await provide_project_details(state.selected_project, state.image_path)
     logger.debug(f"Project overview generated in node: {state.project_overview}")
     return state
 
-def gemini_tutorial_generation_node(state: GraphState) -> Generator[GraphState, None, GraphState]:
-    for part in generate_gemini_tutorial(state.selected_project, state.project_overview, state.image_path):
+async def gemini_tutorial_generation_node(state: GraphState) -> AsyncGenerator[GraphState, None]:
+    async for part in generate_gemini_tutorial(state.selected_project, state.project_overview, state.image_path):
         state.current_section = part["section"]
         state.section_content = part["content"]
         yield state
 
     state.gemini_tutorial = "Tutorial generation completed"
     yield state
-
 
 def define_guide_workflow() -> StateGraph:
     workflow = StateGraph(GraphState)
@@ -112,21 +108,7 @@ def define_guide_workflow() -> StateGraph:
     workflow.add_edge("gemini_tutorial_generation", END)
     
     return workflow
-
-
-def define_guide_workflow() -> StateGraph:
-    workflow = StateGraph(GraphState)
-
-
-
-    workflow.add_node("project_details", project_details_node)
-    workflow.add_node("gemini_tutorial_generation", gemini_tutorial_generation_node)
-    workflow.set_entry_point("project_details")
-
-    workflow.add_edge("project_details", "gemini_tutorial_generation")
-    workflow.add_edge("gemini_tutorial_generation", END)
-    return workflow
-def provide_project_details_service(project: str, image_path: str) -> Generator[str, None, None]:
+async def provide_project_details_service(project: str, image_path: str) -> AsyncGenerator[str, None]:
     initial_state = GraphState(
         image_path=image_path,
         project_ideas="",
@@ -136,8 +118,9 @@ def provide_project_details_service(project: str, image_path: str) -> Generator[
     )
 
     workflow = define_guide_workflow().compile()
+    step = 0  # Initialize step counter
 
-    for step, state in enumerate(workflow.stream(initial_state)):
+    async for state in workflow.astream(initial_state):
         state_dict = dict(state)  # Ensure state is treated as a dictionary
         logger.debug(f"Step {step} state: {state_dict}")
 
@@ -156,3 +139,4 @@ def provide_project_details_service(project: str, image_path: str) -> Generator[
             # Check if this is the last state
             if state_dict["gemini_tutorial_generation"]["gemini_tutorial"] == "Tutorial generation completed":
                 break
+        step += 1  # Increment step counter
