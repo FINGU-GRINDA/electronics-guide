@@ -55,10 +55,16 @@ const FileUpload: React.FC = () => {
       setLoading(true);
       setTutorial(""); // Reset tutorial before starting
       await getProjectDetails(file, selectedProject, (data) => {
-        setTutorial((prev) => prev + data); // Append new data to the tutorial
+        const json = JSON.parse(data);
+        const markdown = convertJsonToMarkdown(json.project_overview);
+        setTutorial((prev) => prev + markdown); // Append new data to the tutorial
       });
       setLoading(false);
     }
+  };
+
+  const convertJsonToMarkdown = (json: string) => {
+    return json.replace(/\\n/g, "\n").replace(/\* /g, "- ");
   };
 
   return (

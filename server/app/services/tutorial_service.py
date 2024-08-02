@@ -26,6 +26,7 @@ class GraphState(BaseModel):
     selected_project: str
     project_overview: str
     gemini_tutorial: str
+
     current_section: Optional[str] = None
     section_content: Optional[str] = None
 
@@ -92,6 +93,7 @@ async def gemini_tutorial_generation_node(state: GraphState) -> AsyncGenerator[G
     async for part in generate_gemini_tutorial(state.selected_project, state.project_overview, state.image_path):
         state.current_section = part["section"]
         state.section_content = part["content"]
+
         yield state
 
     state.gemini_tutorial = "Tutorial generation completed"
@@ -120,23 +122,31 @@ async def provide_project_details_service(project: str, image_path: str) -> Asyn
     workflow = define_guide_workflow().compile()
     step = 0  # Initialize step counter
 
-    async for state in workflow.astream(initial_state):
+    async for state in workflow.astream(initial_state , stream_mode="updates"):
         state_dict = dict(state)  # Ensure state is treated as a dictionary
         logger.debug(f"Step {step} state: {state_dict}")
 
-        if step != 0:
-            if "gemini_tutorial_generation" not in state_dict or "current_section" not in state_dict["gemini_tutorial_generation"]:
-                raise KeyError("current_section or section_content not found in state['gemini_tutorial_generation']")
-            current_section = state_dict["gemini_tutorial_generation"]["current_section"]
-            section_content_data = state_dict["gemini_tutorial_generation"]["section_content"]
-            logger.debug(f"Step {step}: Current section: {current_section}, Section content: {section_content_data}")
-            section_content = json.dumps({
-                "current_section": current_section,
-                "section_content": section_content_data
+        if step == 0:
+            yield json.dumps({
+                "project_overview": state_dict['project_details']["project_overview"],
             }, indent=2)
-            yield section_content  # Yield each section's content as you generate it
 
-            # Check if this is the last state
-            if state_dict["gemini_tutorial_generation"]["gemini_tutorial"] == "Tutorial generation completed":
-                break
+        if step != 0:
+            try:
+                current_section = state_dict["gemini_tutorial_generation"]["current_section"]
+                section_content_data = state_dict["gemini_tutorial_generation"]["section_content"]
+                logger.debug(f"Step {step}: Current section: {current_section}, Section content: {section_content_data}")
+
+                section_content = json.dumps({
+                    "current_section": current_section,
+                    "section_content": section_content_data,
+                }, indent=2)
+                yield section_content  # Yield each section's content as you generate it
+
+                # Check if this is the last state
+                if state_dict["gemini_tutorial_generation"]["gemini_tutorial"] == "Tutorial generation completed":
+                    break
+            except KeyError as e:
+                logger.error(f"Missing key in state dictionary: {e}")
         step += 1  # Increment step counter
+
