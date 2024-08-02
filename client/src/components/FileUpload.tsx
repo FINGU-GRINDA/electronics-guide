@@ -15,15 +15,14 @@ import {
   ListItemText,
   Divider,
 } from "@mui/material";
+import "@react-pdf-viewer/core/lib/styles/index.css";
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [components, setComponents] = useState<string[]>([]);
   const [projectIdeas, setProjectIdeas] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [projectOverview, setProjectOverview] = useState<string>("");
-  const [geminiTutorial, setGeminiTutorial] = useState<string>("");
-  const [htmlContent, setHtmlContent] = useState<string>("");
+  const [tutorial, setTutorial] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,10 +39,10 @@ const FileUpload: React.FC = () => {
       console.log("Project Ideas Response: ", data);
 
       // Extract components from the response
-      const componentsData = data.components;
+      const componentsData = data.components || [];
 
       // Extract project ideas from the response
-      const projectIdeasData = data.project_ideas;
+      const projectIdeasData = data.project_ideas || [];
 
       setComponents(componentsData);
       setProjectIdeas(projectIdeasData);
@@ -54,28 +53,9 @@ const FileUpload: React.FC = () => {
   const handleGetProjectDetails = async () => {
     if (file && selectedProject !== null) {
       setLoading(true);
-      setProjectOverview(""); // Reset project overview before starting
-      setGeminiTutorial(""); // Reset Gemini tutorial before starting
-      setHtmlContent(""); // Reset HTML content before starting
-
-      await getProjectDetails(file, selectedProject, (data, type) => {
-        if (type === "json") {
-          const parsedData = JSON.parse(data);
-          setProjectOverview(parsedData.project_details.project_overview);
-          setGeminiTutorial(parsedData.project_details.gemini_tutorial);
-        } else {
-          // Extract JSON from the HTML response if needed
-          try {
-            const jsonStart = data.indexOf("{");
-            const jsonEnd = data.lastIndexOf("}") + 1;
-            const jsonString = data.substring(jsonStart, jsonEnd);
-            const parsedData = JSON.parse(jsonString);
-            setProjectOverview(parsedData.project_details.project_overview);
-            setGeminiTutorial(parsedData.project_details.gemini_tutorial);
-          } catch (e) {
-            setHtmlContent(data);
-          }
-        }
+      setTutorial(""); // Reset tutorial before starting
+      await getProjectDetails(file, selectedProject, (data) => {
+        setTutorial((prev) => prev + data); // Append new data to the tutorial
       });
       setLoading(false);
     }
@@ -160,40 +140,13 @@ const FileUpload: React.FC = () => {
             )}
           </Box>
           <Box mt={4}>
-            {(projectOverview || geminiTutorial || htmlContent) && (
+            {tutorial && (
               <Card variant="outlined">
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     Project Tutorial
                   </Typography>
-                  {projectOverview && (
-                    <>
-                      <Typography variant="subtitle1" gutterBottom>
-                        Project Overview
-                      </Typography>
-                      <ReactMarkdown className="prose">
-                        {projectOverview}
-                      </ReactMarkdown>
-                    </>
-                  )}
-                  {geminiTutorial && (
-                    <>
-                      <Typography variant="subtitle1" gutterBottom>
-                        Gemini Tutorial
-                      </Typography>
-                      <ReactMarkdown className="prose">
-                        {geminiTutorial}
-                      </ReactMarkdown>
-                    </>
-                  )}
-                  {htmlContent && (
-                    <>
-                      <Typography variant="subtitle1" gutterBottom>
-                        HTML Content
-                      </Typography>
-                      <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-                    </>
-                  )}
+                  <ReactMarkdown className="prose">{tutorial}</ReactMarkdown>
                 </CardContent>
               </Card>
             )}

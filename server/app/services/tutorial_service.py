@@ -12,7 +12,6 @@ import base64
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, FileResponse
 
-from app.utils import save_image_to_temp_file
 from ..core.config import settings  # Import the settings object
 
 logging.basicConfig(level=logging.DEBUG)
@@ -26,12 +25,6 @@ mm_llm = GeminiMultiModal(model_name="models/gemini-1.5-flash-latest", temperatu
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
-
-# Function to generate HTML content
-def generate_html_content(text: str, color: str = None) -> str:
-    color_style = f'style="color: {color}"' if color else ''
-    return f'<span {color_style}>{text}</span><br>'
-
 
 # Agent 2: Project Implementation Details
 def provide_project_details(project: str, image_path: str) -> str:
@@ -110,7 +103,6 @@ def define_guide_workflow() -> StateGraph:
     # Node 4: Gemini Tutorial Generation
     # Update the gemini_tutorial_generation_node to stream each section
     def gemini_tutorial_generation_node(state: Dict[str, Any]) -> Generator[Dict[str, Any], None, Dict[str, Any]]:
-        tutorial_parts = []
         for part in generate_gemini_tutorial(state["selected_project"], state["project_overview"], state["image_path"]):
             if isinstance(part, dict):
                 yield {
@@ -118,9 +110,9 @@ def define_guide_workflow() -> StateGraph:
                     "section_content": part["content"]
                 }
             else:
-                tutorial_parts.append(part)
+                # This is the full tutorial, which we don't need to yield
+                state["gemini_tutorial"] = part
         
-        state["gemini_tutorial"] = "".join(tutorial_parts)
         yield state
 
     
@@ -142,34 +134,15 @@ def provide_project_details_service(project: str, image_path: str) -> Generator[
         gemini_tutorial="",
     )
 
-    print("\nStarting workflow...")
-
     workflow = define_guide_workflow().compile()
-    final_state = None
 
     for step, state in enumerate(workflow.stream(initial_state)):
-        # Stream the section title and content
-        section_title = f"Step {step + 1}: {state.get('current_section', 'Section')} completed."
-        section_content = json.dumps(state, indent=2)
+        if step == 0:
+ # Assuming the state contains project details under the key "project_details"
+            project_details = state["project_details"]
+            state["project_overview"] = project_details  # Update the project overview with the details
 
-        yield generate_html_content(section_title, "red")
-        yield generate_html_content(section_content, "purple")
-
-        final_state = state
-
-    # print("\nWorkflow completed. Final state:")
-    # for key, value in final_state.items():
-    #     if isinstance(value, str) and len(value) > 100:
-    #         print(f"{key}: {value[:100]}...")
-    #     else:
-    #         print(f"{key}: {value}")
-
-    print("\nWorkflow completed. Check 'project_tutorial.pdf' for the detailed tutorial.")
-
-    # Ensure the final state is also yielded in the same format
-    # final_state_details = {key: (value[:100] + '...' if isinstance(value, str) and len(value) > 100 else value)
-    #                        for key, value in final_state.items()}
-    
-    yield json.dumps({
-        "final_state": state
-    })
+            section_content = json.dumps({"project_overview": project_details}, indent=2)
+        else:
+            section_content = json.dumps({"section_content": state.get('gemini_tutorial_generation', '')}, indent=2)
+        yield section_content
