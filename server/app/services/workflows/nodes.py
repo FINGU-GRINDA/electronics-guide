@@ -3,7 +3,7 @@ import asyncio
 from typing import Dict
 from llama_index.core.schema import ImageDocument
 from app.models.workflow import GraphState
-from app.services.llm import mm_llm, provide_project_details
+from .llm import mm_llm, provide_project_details
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,7 @@ async def generate_section_content(state: GraphState, section: str) -> Dict[str,
     Overview: {state.project_overview}
     Section: {section}
     Provide detailed explanations and keep the response under 1000 words.
+    Format the response in styled HTML.
     If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done."""
 
     for attempt in range(3):

@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
 from app.models.workflow import GraphState
-from app.services.nodes import project_details_node, section_node
+from .nodes import project_details_node, section_node
 
 section_titles = [
     "1. Introduction to the project",

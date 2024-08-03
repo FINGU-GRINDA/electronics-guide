@@ -42,6 +42,7 @@ async def project_details_endpoint(request: Request, project: str = Form(...), f
             await asyncio.sleep(0.1)  # Small delay to prevent overwhelming the client
 
     return StreamingResponse(generate(), media_type="application/x-ndjson")
+
 @router.get("/download_tutorial/")
 async def download_tutorial():
     file_path = "project_tutorial.pdf"
