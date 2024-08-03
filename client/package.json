@@ -18,6 +18,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "axios": "^1.7.2",
+    "html-react-parser": "^5.1.12",
     "pdfjs-dist": "^3.11.174",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

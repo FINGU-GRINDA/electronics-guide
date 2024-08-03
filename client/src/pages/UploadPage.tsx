@@ -92,11 +92,7 @@ const UploadPage: React.FC = () => {
             file={file}
             loading={loading}
           />
-          {loading && (
-            <Box display="flex" justifyContent="center" mt={2}>
-              <CircularProgress />
-            </Box>
-          )}
+
           <Box mt={4}>
             {components.length > 0 && <ComponentList components={components} />}
             {projectIdeas.length > 0 && (
@@ -111,6 +107,11 @@ const UploadPage: React.FC = () => {
           <Box mt={4}>
             {tutorial && <ProjectTutorial tutorial={tutorial} />}
           </Box>
+          {loading && (
+            <Box display="flex" justifyContent="center" mt={2}>
+              <CircularProgress />
+            </Box>
+          )}
           {loading && (
             <Box mt={2} display="flex" justifyContent="center">
               <IconButton

@@ -16,7 +16,8 @@ async def provide_project_details(project: str, image_path: str) -> str:
         1. A list of main components needed
         2. Basic steps to connect the components
         3. A brief description of how the project works
-        Format the response in styled HTML.""",
+        Format the response in modern, styled HTML. Use advanced HTML5 and CSS3 techniques to ensure a polished and professional look.
+""",
         image_documents=[image_doc]
     )
     return response.text

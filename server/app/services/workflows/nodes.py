@@ -14,7 +14,7 @@ async def generate_section_content(state: GraphState, section: str) -> Dict[str,
     Overview: {state.project_overview}
     Section: {section}
     Provide detailed explanations and keep the response under 1000 words.
-    Format the response in styled HTML.
+    Format the response in modern, styled HTML. Use advanced HTML5 and CSS3 techniques to ensure a polished and professional look.
     If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done."""
 
     for attempt in range(3):
