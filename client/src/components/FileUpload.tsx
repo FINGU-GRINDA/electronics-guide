@@ -1,166 +1,26 @@
-import React, { useState } from "react";
-import { analyzeImage, getProjectDetails } from "../services/api";
-import ReactMarkdown from "react-markdown";
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Container,
-  Input,
-  Typography,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-} from "@mui/material";
-import "@react-pdf-viewer/core/lib/styles/index.css";
+import React from 'react';
+import { Box, Button, Input } from '@mui/material';
 
-const FileUpload: React.FC = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [components, setComponents] = useState<string[]>([]);
-  const [projectIdeas, setProjectIdeas] = useState<string[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [tutorial, setTutorial] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+interface FileUploadProps {
+  onFileChange: (file: File | null) => void;
+  onAnalyzeImage: (event: React.FormEvent) => void;
+  file: File | null;
+  loading: boolean;
+}
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFile(event.target.files[0]);
-    }
-  };
-
-  const handleAnalyzeImage = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (file) {
-      setLoading(true);
-      const data = await analyzeImage(file);
-      console.log("Project Ideas Response: ", data);
-
-      const componentsData = data.components || [];
-      const projectIdeasData = data.project_ideas || [];
-
-      setComponents(componentsData);
-      setProjectIdeas(projectIdeasData);
-      setLoading(false);
-    }
-  };
-
-  const handleGetProjectDetails = async () => {
-    if (file && selectedProject !== null) {
-      setLoading(true);
-      setTutorial("");
-      await getProjectDetails(file, selectedProject, (data) => {
-        if (data.project_overview) {
-          const markdown = convertJsonToMarkdown(data.project_overview);
-          setTutorial((prev) => prev + markdown);
-        } else if (data.section && data.content) {
-          const sectionMarkdown = `${data.content}\n\n`;
-          setTutorial((prev) => prev + sectionMarkdown);
-        }
-      });
-      setLoading(false);
-    }
-  };
-
-  const convertJsonToMarkdown = (json: string) => {
-    return json.replace(/\\n/g, "\n").replace(/\* /g, "- ");
-  };
-
+const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, onAnalyzeImage, file, loading }) => {
   return (
-    <Container maxWidth="md">
-      <Card variant="outlined" sx={{ mt: 4, p: 2 }}>
-        <CardContent>
-          <form onSubmit={handleAnalyzeImage}>
-            <Box mb={2}>
-              <Input
-                type="file"
-                onChange={handleFileChange}
-                fullWidth
-                disableUnderline
-              />
-            </Box>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={!file}
-            >
-              Upload
-            </Button>
-          </form>
-          {loading && (
-            <Box display="flex" justifyContent="center" mt={2}>
-              <CircularProgress />
-            </Box>
-          )}
-          <Box mt={4}>
-            {components.length > 0 && (
-              <Card variant="outlined" sx={{ mb: 4 }}>
-                <CardContent>
-                  <Typography variant="h6">Components</Typography>
-                  <List>
-                    {components.map((component, index) => (
-                      <ListItem key={index}>
-                        <ListItemText primary={component} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </CardContent>
-              </Card>
-            )}
-            {projectIdeas.length > 0 && (
-              <Box>
-                <Typography variant="h5" gutterBottom>
-                  Project Ideas
-                </Typography>
-                <List>
-                  {projectIdeas.map((idea, index) => (
-                    <React.Fragment key={index}>
-                      <ListItem
-                        button
-                        onClick={() => setSelectedProject(idea)}
-                        selected={selectedProject === idea}
-                      >
-                        <ListItemText
-                          primary={<ReactMarkdown>{idea}</ReactMarkdown>}
-                        />
-                      </ListItem>
-                      {index < projectIdeas.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
-                {selectedProject && (
-                  <Button
-                    onClick={handleGetProjectDetails}
-                    variant="contained"
-                    color="secondary"
-                    fullWidth
-                    sx={{ mt: 2 }}
-                  >
-                    Get Project Details
-                  </Button>
-                )}
-              </Box>
-            )}
-          </Box>
-          <Box mt={4}>
-            {tutorial && (
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Project Tutorial
-                  </Typography>
-                  <ReactMarkdown className="prose">{tutorial}</ReactMarkdown>
-                </CardContent>
-              </Card>
-            )}
-          </Box>
-        </CardContent>
-      </Card>
-    </Container>
+    <form onSubmit={onAnalyzeImage}>
+      <Box mb={2}>
+        <Input type="file" onChange={(e) => {
+          const files = (e.target as HTMLInputElement).files;
+          onFileChange(files ? files[0] : null);
+        }} fullWidth disableUnderline />
+      </Box>
+      <Button type="submit" variant="contained" color="primary" fullWidth disabled={!file || loading}>
+        Upload
+      </Button>
+    </form>
   );
 };
 

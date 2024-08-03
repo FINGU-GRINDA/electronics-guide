@@ -2,6 +2,7 @@ import React from "react";
 import FileUpload from "./components/FileUpload";
 import { Container, CssBaseline, Typography, Box } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import UploadPage from "./pages/UploadPage";
 
 const theme = createTheme({
   palette: {
@@ -27,7 +28,7 @@ const App: React.FC = () => {
       <Container maxWidth="md">
         <Box py={10}>
           <Typography variant="h1">Electronics Project Generator</Typography>
-          <FileUpload />
+          <UploadPage />
         </Box>
       </Container>
     </ThemeProvider>
