@@ -50,8 +50,8 @@ async def provide_project_details(project: str, image_path: str) -> str:
         image_documents=[image_doc]
     )
     return response.text
+import asyncio
 
-# Agent 3: Gemini Tutorial Generator
 async def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> AsyncGenerator[Dict[str, str], None]:
     image_doc = ImageDocument(image_path=image_path)
     sections = [
@@ -76,13 +76,25 @@ async def generate_gemini_tutorial(project: str, overview: str, image_path: str)
         Provide detailed explanations and keep the response under 1000 words.
         If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done."""
 
-        response = await mm_llm.acomplete(prompt=prompt, image_documents=[image_doc])
-        content = response.text
+        for attempt in range(3):  # Retry up to 3 times
+            try:
+                response = await mm_llm.acomplete(prompt=prompt, image_documents=[image_doc])
+                content = response.text
+                yield {
+                    "section": section,
+                    "content": content
+                }
+                break  # Break out of the retry loop on success
+            except Exception as e:
+                logger.error(f"Attempt {attempt + 1} failed for section '{section}': {e}")
+                if attempt == 2:
+                    yield {
+                        "section": section,
+                        "content": f"Error generating content: {str(e)}"
+                    }
+                    break  # No more retries left, break the loop
+                await asyncio.sleep(2)  # Wait a bit before retrying
 
-        yield {
-            "section": section,
-            "content": content
-        }
 
 async def project_details_node(state: GraphState) -> GraphState:
     state.project_overview = await provide_project_details(state.selected_project, state.image_path)
@@ -93,9 +105,11 @@ async def gemini_tutorial_generation_node(state: GraphState) -> AsyncGenerator[G
     async for part in generate_gemini_tutorial(state.selected_project, state.project_overview, state.image_path):
         state.current_section = part["section"]
         state.section_content = part["content"]
-
+        
+        # Yield the state after each section is generated
         yield state
 
+    # After all sections are generated
     state.gemini_tutorial = "Tutorial generation completed"
     yield state
 
@@ -120,33 +134,28 @@ async def provide_project_details_service(project: str, image_path: str) -> Asyn
     )
 
     workflow = define_guide_workflow().compile()
-    step = 0  # Initialize step counter
 
-    async for state in workflow.astream(initial_state , stream_mode="updates"):
-        state_dict = dict(state)  # Ensure state is treated as a dictionary
-        logger.debug(f"Step {step} state: {state_dict}")
+    async for state in workflow.astream(initial_state, stream_mode="updates"):
+        state_dict = dict(state)
+        logger.debug(f"Current state: {state_dict}")
 
-        if step == 0:
+        if "project_details" in state_dict:
             yield json.dumps({
                 "project_overview": state_dict['project_details']["project_overview"],
             }, indent=2)
-
-        if step != 0:
+        
+        if "gemini_tutorial_generation" in state_dict:
             try:
                 current_section = state_dict["gemini_tutorial_generation"]["current_section"]
-                section_content_data = state_dict["gemini_tutorial_generation"]["section_content"]
-                logger.debug(f"Step {step}: Current section: {current_section}, Section content: {section_content_data}")
-
-                section_content = json.dumps({
-                    "current_section": current_section,
-                    "section_content": section_content_data,
-                }, indent=2)
-                yield section_content  # Yield each section's content as you generate it
-
-                # Check if this is the last state
+                section_content = state_dict["gemini_tutorial_generation"]["section_content"]
+                
+                if current_section and section_content:
+                    yield json.dumps({
+                        "current_section": current_section,
+                        "section_content": section_content,
+                    }, indent=2)
+                
                 if state_dict["gemini_tutorial_generation"]["gemini_tutorial"] == "Tutorial generation completed":
                     break
             except KeyError as e:
                 logger.error(f"Missing key in state dictionary: {e}")
-        step += 1  # Increment step counter
-

@@ -14,11 +14,10 @@ export const analyzeImage = async (file: File) => {
 
   return response.data;
 };
-
 export const getProjectDetails = async (
   file: File,
   project: string,
-  onData: (data: string) => void
+  onData: (data: any) => void
 ) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -38,19 +37,26 @@ export const getProjectDetails = async (
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder("utf-8");
-  let result = "";
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     const chunk = decoder.decode(value, { stream: true });
-    result += chunk;
-    onData(result);
+
+    // Split the chunk by newline to handle multiple JSON objects
+    const jsonStrings = chunk.split("\n").filter((str) => str.trim() !== "");
+
+    for (const jsonString of jsonStrings) {
+      try {
+        const data = JSON.parse(jsonString);
+        onData(data);
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+        console.error("Problematic JSON string:", jsonString);
+      }
+    }
   }
-
-  return result;
 };
-
 export const downloadTutorialPdf = async () => {
   const response = await axios.get(
     "http://localhost:8000/api/v1/download_tutorial/",

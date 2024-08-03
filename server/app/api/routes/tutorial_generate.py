@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, FileResponse
@@ -31,7 +32,7 @@ async def project_details_endpoint(project: str = Form(...), file: UploadFile = 
 
     async def generate() -> AsyncGenerator[str, None]:
         async for section_json in provide_project_details_service(project, image_path):
-            yield f"{section_json}\n"
+            yield f"{json.dumps(json.loads(section_json))}\n"
             await asyncio.sleep(0.1)  # Small delay to prevent overwhelming the client
 
     return StreamingResponse(generate(), media_type="application/x-ndjson")

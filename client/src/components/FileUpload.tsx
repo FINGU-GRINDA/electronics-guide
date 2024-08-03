@@ -55,9 +55,13 @@ const FileUpload: React.FC = () => {
       setLoading(true);
       setTutorial(""); // Reset tutorial before starting
       await getProjectDetails(file, selectedProject, (data) => {
-        const json = JSON.parse(data);
-        const markdown = convertJsonToMarkdown(json.project_overview);
-        setTutorial((prev) => prev + markdown); // Append new data to the tutorial
+        if (data.project_overview) {
+          const markdown = convertJsonToMarkdown(data.project_overview);
+          setTutorial((prev) => prev + markdown);
+        } else if (data.current_section && data.section_content) {
+          const sectionMarkdown = `## ${data.current_section}\n\n${data.section_content}\n\n`;
+          setTutorial((prev) => prev + sectionMarkdown);
+        }
       });
       setLoading(false);
     }
