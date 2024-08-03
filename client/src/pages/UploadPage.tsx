@@ -1,3 +1,4 @@
+// UploadPage.tsx
 import React, { useState } from "react";
 import {
   Container,
@@ -9,10 +10,10 @@ import {
 } from "@mui/material";
 import StopIcon from "@mui/icons-material/Stop";
 import { analyzeImage, getProjectDetails } from "../services/api";
-import FileUpload from "../components/FileUpload";
-import ComponentList from "../components/ComponentList";
-import ProjectIdeasList from "../components/ProjectIdeasList";
-import ProjectTutorial from "../components/ProjectTutorial";
+import FileUpload from "./components/FileUpload";
+import ComponentList from "./components/ComponentList";
+import ProjectIdeasList from "./components/ProjectIdeasList";
+import ProjectTutorial from "./components/ProjectTutorial";
 
 const UploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -57,11 +58,9 @@ const UploadPage: React.FC = () => {
           selectedProject,
           (data) => {
             if (data.project_overview) {
-              const markdown = convertJsonToMarkdown(data.project_overview);
-              setTutorial((prev) => prev + markdown);
+              setTutorial((prev) => prev + data.project_overview);
             } else if (data.section && data.content) {
-              const sectionMarkdown = `${data.content}\n\n`;
-              setTutorial((prev) => prev + sectionMarkdown);
+              setTutorial((prev) => prev + data.content);
             }
           },
           controller.signal
@@ -83,13 +82,9 @@ const UploadPage: React.FC = () => {
     }
   };
 
-  const convertJsonToMarkdown = (json: string) => {
-    return json.replace(/\\n/g, "\n").replace(/\* /g, "- ");
-  };
-
   return (
-    <Container maxWidth="md">
-      <Card variant="outlined" sx={{ mt: 4, p: 2 }}>
+    <Container maxWidth="xl" className="bg-white shadow-md rounded-lg p-4 mt-4">
+      <Card variant="outlined">
         <CardContent>
           <FileUpload
             onFileChange={handleFileChange}

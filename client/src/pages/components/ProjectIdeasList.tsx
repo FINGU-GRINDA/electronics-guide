@@ -24,19 +24,28 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
   onGetProjectDetails,
 }) => {
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
+    <Box className="p-6 bg-white shadow-lg rounded-xl">
+      <Typography
+        variant="h5"
+        className="text-center text-2xl font-bold text-gray-700 mb-4"
+      >
         Project Ideas
       </Typography>
-      <List>
+      <List className="space-y-2">
         {projectIdeas.map((idea, index) => (
           <React.Fragment key={index}>
             <ListItem
               button
               onClick={() => onSelectProject(idea)}
               selected={selectedProject === idea}
+              className={`bg-gray-50 hover:bg-gray-100 rounded-lg ${
+                selectedProject === idea ? "bg-blue-50" : ""
+              }`}
             >
-              <ListItemText primary={<ReactMarkdown>{idea}</ReactMarkdown>} />
+              <ListItemText
+                primary={<ReactMarkdown>{idea}</ReactMarkdown>}
+                primaryTypographyProps={{ className: "text-gray-600" }}
+              />
             </ListItem>
             {index < projectIdeas.length - 1 && <Divider />}
           </React.Fragment>
@@ -46,9 +55,9 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
         <Button
           onClick={onGetProjectDetails}
           variant="contained"
-          color="secondary"
+          color="primary"
           fullWidth
-          sx={{ mt: 2 }}
+          className="mt-4"
         >
           Get Project Details
         </Button>

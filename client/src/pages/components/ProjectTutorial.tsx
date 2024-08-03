@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Card, CardContent, Typography, Box } from "@mui/material";
-import ReactMarkdown from "react-markdown";
+// import ReactMarkdown from "react-markdown";
 
 interface ProjectTutorialProps {
   tutorial: string;
@@ -33,9 +33,8 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
             boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
             fontFamily: "monospace",
           }}
-        >
-          <ReactMarkdown className="prose">{tutorial}</ReactMarkdown>
-        </Box>
+          dangerouslySetInnerHTML={{ __html: tutorial }}
+        />
       </CardContent>
     </Card>
   );
