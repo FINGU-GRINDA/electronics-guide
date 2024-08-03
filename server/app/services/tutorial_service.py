@@ -1,9 +1,9 @@
 import json
 import os
-from typing import Dict, AsyncGenerator, Generator, Optional
+from typing import Dict, AsyncGenerator, List, Optional
 from llama_index.multi_modal_llms.gemini import GeminiMultiModal
 from llama_index.core.schema import ImageDocument
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, END, START
 import logging
 import markdown
 import pdfkit
@@ -26,6 +26,7 @@ class GraphState(BaseModel):
     selected_project: str
     project_overview: str
     gemini_tutorial: str
+    sections: List[Dict[str, str]] = []
 
     current_section: Optional[str] = None
     section_content: Optional[str] = None
@@ -50,79 +51,102 @@ async def provide_project_details(project: str, image_path: str) -> str:
         image_documents=[image_doc]
     )
     return response.text
+
 import asyncio
 
-async def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> AsyncGenerator[Dict[str, str], None]:
-    image_doc = ImageDocument(image_path=image_path)
-    sections = [
-        "1. Introduction to the project",
-        "2. List of components and tools needed",
-        "3. Step-by-step instructions",
-        "4. Circuit diagram or wiring instructions",
-        "5. Code explanation",
-        "6. Troubleshooting guide",
-        "7. Safety precautions",
-        "8. Conclusion"
-    ]
+async def generate_section_content(state: GraphState, section: str) -> Dict[str, str]:
+    image_doc = ImageDocument(image_path=state.image_path)
+    prompt = f"""Based on the following project and overview, generate content for this section of the tutorial:
 
-    for section in sections:
-        prompt = f"""Based on the following project and overview, generate content for this section of the tutorial:
+    Project: {state.selected_project}
+    Overview: {state.project_overview}
 
-        Project: {project}
-        Overview: {overview}
+    Section: {section}
 
-        Section: {section}
+    Provide detailed explanations and keep the response under 1000 words.
+    If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done."""
 
-        Provide detailed explanations and keep the response under 1000 words.
-        If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done."""
-
-        for attempt in range(3):  # Retry up to 3 times
-            try:
-                response = await mm_llm.acomplete(prompt=prompt, image_documents=[image_doc])
-                content = response.text
-                yield {
+    for attempt in range(3):  # Retry up to 3 times
+        try:
+            response = await mm_llm.acomplete(prompt=prompt, image_documents=[image_doc])
+            content = response.text
+            return {
+                "section": section,
+                "content": content
+            }
+        except Exception as e:
+            logger.error(f"Attempt {attempt + 1} failed for section '{section}': {e}")
+            if attempt == 2:
+                return {
                     "section": section,
-                    "content": content
+                    "content": f"Error generating content: {str(e)}"
                 }
-                break  # Break out of the retry loop on success
-            except Exception as e:
-                logger.error(f"Attempt {attempt + 1} failed for section '{section}': {e}")
-                if attempt == 2:
-                    yield {
-                        "section": section,
-                        "content": f"Error generating content: {str(e)}"
-                    }
-                    break  # No more retries left, break the loop
-                await asyncio.sleep(2)  # Wait a bit before retrying
+            await asyncio.sleep(2)  # Wait a bit before retrying
 
-
-async def project_details_node(state: GraphState) -> GraphState:
+async def project_details_node(state: GraphState) -> Dict[str, str]:
     state.project_overview = await provide_project_details(state.selected_project, state.image_path)
     logger.debug(f"Project overview generated in node: {state.project_overview}")
-    return state
+    return {"project_overview": state.project_overview}
 
-async def gemini_tutorial_generation_node(state: GraphState) -> AsyncGenerator[GraphState, None]:
-    async for part in generate_gemini_tutorial(state.selected_project, state.project_overview, state.image_path):
-        state.current_section = part["section"]
-        state.section_content = part["content"]
-        
-        # Yield the state after each section is generated
-        yield state
+async def section_node(state: GraphState, section: str) -> Dict[str, str]:
+    section_content = await generate_section_content(state, section)
+    state.sections.append(section_content)
+    state.current_section = section_content["section"]
+    state.section_content = section_content["content"]
+    logger.debug(f"Generated content for section {section}: {section_content['content']}")
+    return {
+        "current_section": state.current_section,
+        "section_content": state.section_content
+    }
 
-    # After all sections are generated
-    state.gemini_tutorial = "Tutorial generation completed"
-    yield state
+async def section_1_node(state: GraphState) -> Dict[str, str]:
+    return await section_node(state, "1. Introduction to the project")
+
+async def section_2_node(state: GraphState) -> Dict[str, str]:
+    return await section_node(state, "2. List of components and tools needed")
+
+async def section_3_node(state: GraphState) -> Dict[str, str]:
+    return await section_node(state, "3. Step-by-step instructions")
+
+async def section_4_node(state: GraphState) -> Dict[str, str]:
+    return await section_node(state, "4. Circuit diagram or wiring instructions")
+
+async def section_5_node(state: GraphState) -> Dict[str, str]:
+    return await section_node(state, "5. Code explanation")
+
+async def section_6_node(state: GraphState) -> Dict[str, str]:
+    return await section_node(state, "6. Troubleshooting guide")
+
+async def section_7_node(state: GraphState) -> Dict[str, str]:
+    return await section_node(state, "7. Safety precautions")
+
+async def section_8_node(state: GraphState) -> Dict[str, str]:
+    return await section_node(state, "8. Conclusion")
 
 def define_guide_workflow() -> StateGraph:
     workflow = StateGraph(GraphState)
 
     workflow.add_node("project_details", project_details_node)
-    workflow.add_node("gemini_tutorial_generation", gemini_tutorial_generation_node)
-    workflow.set_entry_point("project_details")
-
-    workflow.add_edge("project_details", "gemini_tutorial_generation")
-    workflow.add_edge("gemini_tutorial_generation", END)
+    workflow.add_node("section_1", section_1_node)
+    workflow.add_node("section_2", section_2_node)
+    workflow.add_node("section_3", section_3_node)
+    workflow.add_node("section_4", section_4_node)
+    workflow.add_node("section_5", section_5_node)
+    workflow.add_node("section_6", section_6_node)
+    workflow.add_node("section_7", section_7_node)
+    workflow.add_node("section_8", section_8_node)
     
+    workflow.set_entry_point("project_details")
+    workflow.add_edge("project_details", "section_1")
+    workflow.add_edge("section_1", "section_2")
+    workflow.add_edge("section_2", "section_3")
+    workflow.add_edge("section_3", "section_4")
+    workflow.add_edge("section_4", "section_5")
+    workflow.add_edge("section_5", "section_6")
+    workflow.add_edge("section_6", "section_7")
+    workflow.add_edge("section_7", "section_8")
+    workflow.add_edge("section_8", END)
+
     return workflow
 async def provide_project_details_service(project: str, image_path: str) -> AsyncGenerator[str, None]:
     initial_state = GraphState(
@@ -131,6 +155,7 @@ async def provide_project_details_service(project: str, image_path: str) -> Asyn
         selected_project=project,
         project_overview="",
         gemini_tutorial="",
+        sections=[]
     )
 
     workflow = define_guide_workflow().compile()
@@ -139,23 +164,59 @@ async def provide_project_details_service(project: str, image_path: str) -> Asyn
         state_dict = dict(state)
         logger.debug(f"Current state: {state_dict}")
 
-        if "project_details" in state_dict:
+        if "project_details" in state_dict and "project_overview" in state_dict["project_details"]:
             yield json.dumps({
-                "project_overview": state_dict['project_details']["project_overview"],
+                "project_overview": state_dict["project_details"]["project_overview"],
             }, indent=2)
         
-        if "gemini_tutorial_generation" in state_dict:
-            try:
-                current_section = state_dict["gemini_tutorial_generation"]["current_section"]
-                section_content = state_dict["gemini_tutorial_generation"]["section_content"]
-                
-                if current_section and section_content:
-                    yield json.dumps({
-                        "current_section": current_section,
-                        "section_content": section_content,
-                    }, indent=2)
-                
-                if state_dict["gemini_tutorial_generation"]["gemini_tutorial"] == "Tutorial generation completed":
-                    break
-            except KeyError as e:
-                logger.error(f"Missing key in state dictionary: {e}")
+        if "section_1" in state_dict and "section_content" in state_dict["section_1"]:
+            
+            yield json.dumps({
+                "section": "1. Introduction to the project",
+                "content": state_dict["section_1"]["section_content"]
+            }, indent=2)
+        
+        if "section_2" in state_dict:
+            yield json.dumps({
+                "section": "2. List of components and tools needed",
+                "content": state_dict["section_2"]["section_content"]
+            }, indent=2)
+
+        if "section_3" in state_dict:
+            yield json.dumps({
+                "section": "3. Step-by-step instructions",
+                "content": state_dict["section_3"]["section_content"]
+            }, indent=2)
+        
+        if "section_4" in state_dict:
+            yield json.dumps({
+                "section": "4. Circuit diagram or wiring instructions",
+                "content": state_dict["section_4"]["section_content"]
+            }, indent=2)
+        
+        if "section_5" in state_dict:
+            yield json.dumps({
+                "section": "5. Code explanation",
+                "content": state_dict["section_5"]["section_content"]
+            }, indent=2)
+        
+        if "section_6" in state_dict:
+            yield json.dumps({
+                "section": "6. Troubleshooting guide",
+                "content": state_dict["section_6"]["section_content"]
+            }, indent=2)
+        
+        if "section_7" in state_dict:
+            yield json.dumps({
+                "section": "7. Safety precautions",
+                "content": state_dict["section_7"]["section_content"]
+            }, indent=2)
+        
+        if "section_8" in state_dict:
+            yield json.dumps({
+                "section": "8. Conclusion",
+                "content": state_dict["section_8"]["section_content"]
+            }, indent=2)
+
+        if state_dict.get("gemini_tutorial") == "Tutorial generation completed":
+            break

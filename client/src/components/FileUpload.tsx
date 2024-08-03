@@ -38,10 +38,7 @@ const FileUpload: React.FC = () => {
       const data = await analyzeImage(file);
       console.log("Project Ideas Response: ", data);
 
-      // Extract components from the response
       const componentsData = data.components || [];
-
-      // Extract project ideas from the response
       const projectIdeasData = data.project_ideas || [];
 
       setComponents(componentsData);
@@ -53,13 +50,13 @@ const FileUpload: React.FC = () => {
   const handleGetProjectDetails = async () => {
     if (file && selectedProject !== null) {
       setLoading(true);
-      setTutorial(""); // Reset tutorial before starting
+      setTutorial("");
       await getProjectDetails(file, selectedProject, (data) => {
         if (data.project_overview) {
           const markdown = convertJsonToMarkdown(data.project_overview);
           setTutorial((prev) => prev + markdown);
-        } else if (data.current_section && data.section_content) {
-          const sectionMarkdown = `## ${data.current_section}\n\n${data.section_content}\n\n`;
+        } else if (data.section && data.content) {
+          const sectionMarkdown = `${data.content}\n\n`;
           setTutorial((prev) => prev + sectionMarkdown);
         }
       });
@@ -124,7 +121,7 @@ const FileUpload: React.FC = () => {
                     <React.Fragment key={index}>
                       <ListItem
                         button
-                        onClick={() => setSelectedProject(idea)} // Set the project string
+                        onClick={() => setSelectedProject(idea)}
                         selected={selectedProject === idea}
                       >
                         <ListItemText

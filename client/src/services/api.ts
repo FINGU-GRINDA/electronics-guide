@@ -49,6 +49,8 @@ export const getProjectDetails = async (
     for (const jsonString of jsonStrings) {
       try {
         const data = JSON.parse(jsonString);
+        console.log("Received data chunk:", data); // Log the received data
+
         onData(data);
       } catch (error) {
         console.error("Error parsing JSON:", error);
