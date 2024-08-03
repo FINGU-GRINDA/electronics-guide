@@ -1,9 +1,24 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import image_analysis,tutorial_generate
+from contextlib import asynccontextmanager
+import logging
+from app.api.routes import image_analysis, tutorial_generate
 from app.core.config import settings
+from app.shared_resources import shutdown_event
 
-app = FastAPI(title=settings.PROJECT_NAME)
+# Initialize logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Application startup.")
+    yield
+    logger.info("Application shutdown. Stopping ongoing tasks...")
+    shutdown_event.set()
+
+# Initialize FastAPI application
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
 # Enable CORS
 app.add_middleware(
@@ -14,5 +29,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+# Include routers
 app.include_router(image_analysis.router, prefix=settings.API_V1_STR)
 app.include_router(tutorial_generate.router, prefix=settings.API_V1_STR)

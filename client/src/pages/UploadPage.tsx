@@ -5,7 +5,9 @@ import {
   CardContent,
   Box,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
+import StopIcon from "@mui/icons-material/Stop";
 import { analyzeImage, getProjectDetails } from "../services/api";
 import FileUpload from "../components/FileUpload";
 import ComponentList from "../components/ComponentList";
@@ -19,6 +21,8 @@ const UploadPage: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [tutorial, setTutorial] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
 
   const handleFileChange = (file: File | null) => {
     setFile(file);
@@ -44,16 +48,38 @@ const UploadPage: React.FC = () => {
     if (file && selectedProject !== null) {
       setLoading(true);
       setTutorial("");
-      await getProjectDetails(file, selectedProject, (data) => {
-        if (data.project_overview) {
-          const markdown = convertJsonToMarkdown(data.project_overview);
-          setTutorial((prev) => prev + markdown);
-        } else if (data.section && data.content) {
-          const sectionMarkdown = `${data.content}\n\n`;
-          setTutorial((prev) => prev + sectionMarkdown);
+      const controller = new AbortController();
+      setAbortController(controller);
+
+      try {
+        await getProjectDetails(
+          file,
+          selectedProject,
+          (data) => {
+            if (data.project_overview) {
+              const markdown = convertJsonToMarkdown(data.project_overview);
+              setTutorial((prev) => prev + markdown);
+            } else if (data.section && data.content) {
+              const sectionMarkdown = `${data.content}\n\n`;
+              setTutorial((prev) => prev + sectionMarkdown);
+            }
+          },
+          controller.signal
+        );
+      } catch (error) {
+        if ((error as Error).name === "AbortError") {
+          console.log("Streaming aborted");
+        } else {
+          console.error("Error during streaming:", error);
         }
-      });
+      }
       setLoading(false);
+    }
+  };
+
+  const handleStopStreaming = () => {
+    if (abortController) {
+      abortController.abort();
     }
   };
 
@@ -90,6 +116,17 @@ const UploadPage: React.FC = () => {
           <Box mt={4}>
             {tutorial && <ProjectTutorial tutorial={tutorial} />}
           </Box>
+          {loading && (
+            <Box mt={2} display="flex" justifyContent="center">
+              <IconButton
+                color="secondary"
+                onClick={handleStopStreaming}
+                sx={{ border: "1px solid", borderRadius: "8px" }}
+              >
+                <StopIcon />
+              </IconButton>
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Container>

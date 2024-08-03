@@ -14,10 +14,12 @@ export const analyzeImage = async (file: File) => {
 
   return response.data;
 };
+
 export const getProjectDetails = async (
   file: File,
   project: string,
-  onData: (data: any) => void
+  onData: (data: any) => void,
+  signal: AbortSignal
 ) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -28,6 +30,7 @@ export const getProjectDetails = async (
     {
       method: "POST",
       body: formData,
+      signal,
     }
   );
 
@@ -59,6 +62,7 @@ export const getProjectDetails = async (
     }
   }
 };
+
 export const downloadTutorialPdf = async () => {
   const response = await axios.get(
     "http://localhost:8000/api/v1/download_tutorial/",
