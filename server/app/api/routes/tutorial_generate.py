@@ -34,7 +34,7 @@ async def project_details_endpoint(request: Request, project: str = Form(...), f
     image_path = save_image_to_temp_file(image_data)
 
     async def generate() -> AsyncGenerator[str, None]:
-        async for section_json in provide_project_details_service(project, image_path):
+        async for section_json in provide_project_details_service(project):
             if await request.is_disconnected() or shutdown_event.is_set():
                 logger.info("Client disconnected or server shutting down, stopping the generator.")
                 break

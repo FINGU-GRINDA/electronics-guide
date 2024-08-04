@@ -7,7 +7,7 @@ from langgraph.graph import StateGraph, END
 import logging
 
 import base64
-
+from .workflows.llm import client
 
 from app.utils import save_image_to_temp_file
 from ..core.config import settings  # Import the settings object
@@ -48,60 +48,66 @@ def analyze_image_and_suggest_projects(image_path: str) -> str:
     return response.text
 
 # Agent 2: Project Implementation Details
-def provide_project_details(project: str, image_path: str) -> str:
-    print(f"Generating tutorial for project: {project}")
-    image_doc = ImageDocument(image_path=image_path)
-    response = mm_llm.complete(
-        prompt=f"""Provide a brief overview of how to implement this electronic project: {project}
-        Include:
-        1. A list of main components needed
-        2. Basic steps to connect the components
-        3. A brief description of how the project works
-
-        Keep the response under 300 words.""",
-        image_documents=[image_doc]
+async def provide_project_details(project: str) -> str:
+    response = client.chat.completions.create(
+        model="tiiuae/falcon-180B-chat",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": f"""Provide a brief overview of how to implement this electronic project: {project}
+            Include:
+            1. A list of main components needed
+            2. Basic steps to connect the components
+            3. A brief description of how the project works
+            Format the response in modern, styled HTML. Use advanced HTML5 and CSS3 techniques to ensure a polished and professional look."""}
+        ],
+        max_tokens=1000,
+        temperature=0.7,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
     )
-    return response.text
+    
+    return response.choices[0].message.content
+
 
 # Agent 3: Gemini Tutorial Generator
 
 # Update the generator function to yield each section
-def generate_gemini_tutorial(project: str, overview: str, image_path: str) -> Generator[str, None, None]:
-    image_doc = ImageDocument(image_path=image_path)
-    sections = [
-        "1. Introduction to the project",
-        "2. List of components and tools needed",
-        "3. Step-by-step instructions",
-        "4. Circuit diagram or wiring instructions",
-        "5. Code explanation",
-        "6. Troubleshooting guide",
-        "7. Safety precautions",
-        "8. Conclusion"
-    ]
+# def generate_gemini_tutorial(project: str, overview: str) -> Generator[str, None, None]:
+#     sections = [
+#         "1. Introduction to the project",
+#         "2. List of components and tools needed",
+#         "3. Step-by-step instructions",
+#         "4. Circuit diagram or wiring instructions",
+#         "5. Code explanation",
+#         "6. Troubleshooting guide",
+#         "7. Safety precautions",
+#         "8. Conclusion"
+#     ]
 
-    full_tutorial = f"# {project}\n\n"
+#     full_tutorial = f"# {project}\n\n"
 
-    for section in sections:
-        prompt = f"""Based on the following project and overview, generate content for this section of the tutorial:
+#     for section in sections:
+#         prompt = f"""Based on the following project and overview, generate content for this section of the tutorial:
 
-        Project: {project}
-        Overview: {overview}
+#         Project: {project}
+#         Overview: {overview}
 
-        Section: {section}
+#         Section: {section}
 
-        Provide detailed explanations and keep the response under 1000 words.
-        If this section involves code, provide a detailed code example with comments. the code should be completed not half one."""
+#         Provide detailed explanations and keep the response under 1000 words.
+#         If this section involves code, provide a detailed code example with comments. the code should be completed not half one."""
 
-        response = mm_llm.complete(prompt=prompt, image_documents=[image_doc])
-        content = response.text
+#         response = mm_llm.complete(prompt=prompt)
+#         content = response.text
 
-        full_tutorial += f"\n\n## {section}\n\n{content}"
-        yield {
-            "section": section,
-            "content": content
-        }
+#         full_tutorial += f"\n\n## {section}\n\n{content}"
+#         yield {
+#             "section": section,
+#             "content": content
+#         }
 
-    yield full_tutorial
+#     yield full_tutorial
 
 class GraphState(TypedDict):
     image_path: str

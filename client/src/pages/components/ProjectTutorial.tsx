@@ -1,22 +1,97 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Card, CardContent, Typography, Box, IconButton, Button } from "@mui/material";
-import { ZoomIn, ZoomOut, Refresh } from "@mui/icons-material";
-import parse from "html-react-parser";
+import React, { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Button,
+  IconButton,
+} from "@mui/material";
+import parse, {
+  domToReact,
+  HTMLReactParserOptions,
+  Element,
+} from "html-react-parser";
 import jsPDF from "jspdf";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 interface ProjectTutorialProps {
   tutorial: string;
 }
 
 const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
-  const tutorialRef = useRef<HTMLDivElement>(null);
   const [tutorialContent, setTutorialContent] = useState("");
 
   useEffect(() => {
-    setTutorialContent(tutorial);
+    setTutorialContent(formatTutorial(tutorial));
   }, [tutorial]);
+  const formatTutorial = (content: string): string => {
+    const lines = content.split("\n");
+    let formattedContent = "";
+    let inCodeBlock = false;
+    let codeBlockContent = "";
+    let codeLanguage = "";
 
+    const processCodeBlock = () => {
+      if (codeBlockContent.trim()) {
+        formattedContent += `<pre class="code-block" data-language="${codeLanguage}"><code>${codeBlockContent.trim()}</code></pre>`;
+      }
+      inCodeBlock = false;
+      codeBlockContent = "";
+      codeLanguage = "";
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      if (line.startsWith("```") || line.startsWith("'''")) {
+        if (inCodeBlock) {
+          processCodeBlock();
+        } else {
+          inCodeBlock = true;
+          codeLanguage = line.slice(3).trim();
+        }
+      } else if (inCodeBlock) {
+        codeBlockContent += line + "\n";
+      } else {
+        // Improved normal text processing
+        const processedLine = line
+          .replace(
+            /^(#{1,6})\s(.+)$/,
+            (_, hashes, text) =>
+              `<h${hashes.length} class="title">${text}</h${hashes.length}>`
+          )
+          .replace(/^([A-Z][\w\s]+:)$/, '<h2 class="subtitle">$1</h2>')
+          .replace(
+            /^(\d+\.?\s?)(.+)$/,
+            '<div class="list-item"><strong>$1</strong> $2</div>'
+          )
+          .replace(/^-\s(.+)$/, "<li>$1</li>")
+          .replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+
+        formattedContent += processedLine + "\n";
+      }
+
+      // Check for potential unlabeled code blocks
+      if (!inCodeBlock && i < lines.length - 3) {
+        const nextLines = lines.slice(i + 1, i + 4).join("\n");
+        if (
+          nextLines.match(/^\s*(var|let|const|function|if|for|while|class)\s/m)
+        ) {
+          inCodeBlock = true;
+          codeLanguage = "javascript"; // Assume JavaScript as default
+          i++; // Skip the next line as it's the start of the code block
+        }
+      }
+    }
+
+    // Process any remaining code block
+    if (inCodeBlock) {
+      processCodeBlock();
+    }
+
+    return formattedContent.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br>");
+  };
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -25,7 +100,7 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
     const maxWidth = pageWidth - 2 * margin;
 
     let y = margin;
-    const lines = tutorial.split('\n');
+    const lines = tutorial.split("\n");
 
     doc.setFont("helvetica");
     doc.setFontSize(12);
@@ -36,11 +111,11 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
         y = margin;
       }
 
-      const words = line.split(' ');
-      let currentLine = '';
+      const words = line.split(" ");
+      let currentLine = "";
 
       words.forEach((word) => {
-        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const testLine = currentLine + (currentLine ? " " : "") + word;
         const testWidth = doc.getTextWidth(testLine);
 
         if (testWidth > maxWidth) {
@@ -68,6 +143,80 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
     doc.save("tutorial.pdf");
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Code copied to clipboard!");
+    });
+  };
+
+  const parseOptions: HTMLReactParserOptions = {
+    replace: (domNode) => {
+      if (domNode instanceof Element) {
+        const { attribs, children, name } = domNode;
+
+        if (
+          name === "h1" ||
+          name === "h2" ||
+          name === "h3" ||
+          name === "h4" ||
+          name === "h5" ||
+          name === "h6"
+        ) {
+          return (
+            <Typography
+              variant={`h${name.charAt(1)}` as any}
+              component={name}
+              className={attribs.class}
+            >
+              {domToReact(children as any)}
+            </Typography>
+          );
+        }
+
+        if (name === "p") {
+          return (
+            <Typography variant="body1" component="p" className="paragraph">
+              {domToReact(children as any)}
+            </Typography>
+          );
+        }
+
+        if (name === "pre" && attribs.class === "code-block") {
+          const codeElement = children.find(
+            (child) => child instanceof Element && child.name === "code"
+          ) as Element;
+          const code =
+            codeElement?.children[0] instanceof Text
+              ? codeElement.children[0].data
+              : "";
+          const language = attribs["data-language"];
+          return (
+            <Box className="code-block-container" sx={{ position: "relative" }}>
+              <IconButton
+                onClick={() => copyToClipboard(code)}
+                sx={{ position: "absolute", top: 5, right: 5 }}
+              >
+                <ContentCopyIcon />
+              </IconButton>
+              <pre className={`code-block language-${language}`}>
+                <code>{code}</code>
+              </pre>
+            </Box>
+          );
+        }
+        if (name === "code" && attribs.class === "inline-code") {
+          return (
+            <code className="inline-code">{domToReact(children as any)}</code>
+          );
+        }
+
+        if (name === "li") {
+          return <li className="list-item">{domToReact(children as any)}</li>;
+        }
+      }
+    },
+  };
+
   return (
     <Card variant="outlined">
       <CardContent>
@@ -76,72 +225,16 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
         </Typography>
         <Box
           sx={{
-            position: "relative",
             maxHeight: "700px",
-            overflow: "hidden",
+            overflowY: "auto",
             border: "1px solid #ccc",
             borderRadius: "8px",
             padding: "16px",
             backgroundColor: "#f9f9f9",
             boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-            fontFamily: "monospace",
           }}
         >
-          <TransformWrapper wheel={{ disabled: true }}>
-            {({ zoomIn, zoomOut, resetTransform }) => (
-              <>
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: "8px",
-                    right: "8px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                  }}
-                >
-                  <IconButton
-                    onClick={() => zoomIn()}
-                    color="primary"
-                    aria-label="zoom in"
-                  >
-                    <ZoomIn />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => zoomOut()}
-                    color="primary"
-                    aria-label="zoom out"
-                  >
-                    <ZoomOut />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => resetTransform()}
-                    color="primary"
-                    aria-label="reset"
-                  >
-                    <Refresh />
-                  </IconButton>
-                </Box>
-                <TransformComponent>
-                  <Box
-                    ref={tutorialRef}
-                    sx={{
-                      maxHeight: "700px",
-                      overflowY: "auto",
-                      border: "1px solid #ccc",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      backgroundColor: "#f9f9f9",
-                      boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    {parse(tutorialContent)}
-                  </Box>
-                </TransformComponent>
-              </>
-            )}
-          </TransformWrapper>
+          {parse(tutorialContent, parseOptions)}
         </Box>
         <Button
           variant="contained"

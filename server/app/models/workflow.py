@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 
 class GraphState(BaseModel):
-    image_path: str
     project_ideas: str
     selected_project: str
     project_overview: str

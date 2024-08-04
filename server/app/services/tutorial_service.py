@@ -12,13 +12,9 @@ from .workflows.tutorial_workflow import define_guide_workflow, section_titles
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def encode_image(image_path: str) -> str:
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
 
-async def provide_project_details_service(project: str, image_path: str) -> AsyncGenerator[str, None]:
+async def provide_project_details_service(project: str) -> AsyncGenerator[str, None]:
     initial_state = GraphState(
-        image_path=image_path,
         project_ideas="",
         selected_project=project,
         project_overview="",
