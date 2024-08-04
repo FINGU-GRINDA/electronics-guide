@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, FileResponse
-from app.services.tutorial_service import provide_project_details_service
 from app.services.ideas_service import analyze_image, save_image_to_temp_file
 
 from app.models.image import ImageAnalysisResponse, ProjectDetailsResponse

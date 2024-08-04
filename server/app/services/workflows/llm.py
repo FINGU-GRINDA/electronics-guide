@@ -15,18 +15,7 @@ client = AI71(settings.AI71_API_KEY)
 
 mm_llm = GeminiMultiModal(model_name="models/gemini-1.5-flash-latest", temperature=0.7, api_key=settings.GOOGLE_API_KEY)
 
-# async def provide_project_details(project: str) -> str:
-#     response = await mm_llm.acomplete(
-#         prompt=f"""Provide a brief overview of how to implement this electronic project: {project}
-#         Include:
-#         1. A list of main components needed
-#         2. Basic steps to connect the components
-#         3. A brief description of how the project works
-#         Format the response in modern, styled HTML. Use advanced HTML5 and CSS3 techniques to ensure a polished and professional look.
-# """
-    
-#     )
-#     return response.text
+
 async def provide_project_details(project: str) -> str:
     response = client.chat.completions.create(
         model="tiiuae/falcon-180B-chat",
@@ -35,7 +24,7 @@ async def provide_project_details(project: str) -> str:
  You are a helpful assistant. 
              Answer in details and keep the response under 1000 words.
              You're an expert in electronics and you're helping a beginner understand how to implement a project.
-             
+
            
 """},
             {"role": "user", "content": f"""Provide a brief overview of how to implement this electronic project: {project}
