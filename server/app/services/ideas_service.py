@@ -9,8 +9,8 @@ import logging
 import base64
 from .workflows.llm import client
 
-from app.utils import save_image_to_temp_file
 from ..core.config import settings  # Import the settings object
+from app.utils.save_image_to_temp import save_image_to_temp_file
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

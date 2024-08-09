@@ -36,7 +36,7 @@ async def project_details_endpoint(request: Request, project: str = Form(...)):
     async def generate() -> AsyncGenerator[str, None]:
         async for section_json in provide_project_details_service(project):
             if await request.is_disconnected():
-                logger.info("Client disconnected, stopping the generator.")
+                # logger.info("Client disconnected, stopping the generator.")
                 break
             yield f"{section_json}\n"
             await asyncio.sleep(0.1)  # Small delay to prevent overwhelming the client
