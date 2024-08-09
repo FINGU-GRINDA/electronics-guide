@@ -193,21 +193,25 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
 						padding: '16px',
 						backgroundColor: '#f9f9f9',
 						boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+            position: 'relative',
+            display: 'flex',
+            justifyContent: 'center',
 					}}
 				>
-					{/* <ReactMarkdown
+					<ReactMarkdown
 						remarkPlugins={[remarkGfm]}
+						className='prose w-full'
 						// rehypePlugins={[rehypeRaw]}
 					>
 						{tutorialContent}
-					</ReactMarkdown> */}
-					<MuiMarkdown
-            Highlight={Highlight}
-            themes={themes}
-            prismTheme={themes.github}
-					>
-						{tutorialContent}
-					</MuiMarkdown>
+					</ReactMarkdown>
+						{/* <MuiMarkdown
+							Highlight={Highlight}
+							themes={themes}
+							prismTheme={themes.github}
+						>
+							{tutorialContent}
+						</MuiMarkdown> */}
 				</Box>
 				<Button
 					variant='contained'
