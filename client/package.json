@@ -63,6 +63,7 @@
     ]
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.14",
     "@types/babel__traverse": "^7.20.6",
     "@types/istanbul-lib-coverage": "^2.0.6",
     "@types/q": "^1.5.8",
