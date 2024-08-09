@@ -35,6 +35,7 @@ async def generate_section_content(project: str, section: str) -> AsyncGenerator
             if chunk.text:
                 # No need to split by sentences if Markdown is properly generated
                 yield {"section": section, "content": chunk.text}
+        yield {"section": section, "content": "\n\n"}
     except Exception as e:
         logger.error(f"Error generating content for section '{section}': {e}")
         yield {"section": section, "content": f"Error generating content: {str(e)}"}
@@ -53,9 +54,12 @@ async def provide_project_details(project: str) -> AsyncGenerator[Dict[str, str]
         # Streaming the response in larger chunks (e.g., sentences)
         async for chunk in response_stream:
             if chunk.text:
-                sentences = chunk.text.split('. ')
-                for sentence in sentences:
-                    yield {"project_overview": sentence + ". "}
+                yield {"project_overview": chunk.text}
+                # sentences = chunk.text.split('. ')
+                # for sentence in sentences:
+                #     yield {"project_overview": sentence + ". "}
+        yield {"project_overview": "\n\n"}
+        
     except Exception as e:
         logger.error(f"Error generating project overview: {e}")
         yield {"project_overview": f"Error generating project overview: {str(e)}"}
@@ -81,7 +85,9 @@ async def provide_project_details_service(project: str) -> AsyncGenerator[str, N
 
     for task in tasks:
         async for chunk in task:
-            processed_chunk = process_markdown(chunk.get('content', ''))
-            chunk['content'] = processed_chunk
+            # with open('log.jsonl', 'a+') as f:
+            #     f.write(json.dumps(chunk) + '\n')
+            # processed_chunk = process_markdown(chunk.get('content', ''))
+            # chunk['content'] = processed_chunk
             yield json.dumps(chunk)
-            await asyncio.sleep(0.1)
+            # await asyncio.sleep(0.1)
