@@ -39,7 +39,7 @@ async def project_details_endpoint(request: Request, project: str = Form(...)):
                 # logger.info("Client disconnected, stopping the generator.")
                 break
             yield f"{section_json}\n"
-            await asyncio.sleep(0.1)  # Small delay to prevent overwhelming the client
+            # await asyncio.sleep(0.1)  # Small delay to prevent overwhelming the client
 
     return StreamingResponse(generate(), media_type="application/x-ndjson")
 @router.get("/download_tutorial/")
