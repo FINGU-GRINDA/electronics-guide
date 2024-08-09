@@ -1,229 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import {
-	Card,
-	CardContent,
-	Typography,
-	Box,
-	Button,
-	IconButton,
-} from '@mui/material';
-import parse, {
-	domToReact,
-	HTMLReactParserOptions,
-	Element,
-} from 'html-react-parser';
-import jsPDF from 'jspdf';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
-import { MuiMarkdown, getOverrides } from 'mui-markdown';
-import { Highlight, themes } from 'prism-react-renderer';
-import { HighlightRounded } from '@mui/icons-material';
+import React, { useEffect, useState, useRef } from "react";
+import { Card, CardContent, Typography, Box, Button } from "@mui/material";
+import jsPDF from "jspdf";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import html2canvas from "html2canvas";
 
 interface ProjectTutorialProps {
-	tutorial: string;
+  tutorial: string;
 }
 
 const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
-	const [tutorialContent, setTutorialContent] = useState('');
+  const [tutorialContent, setTutorialContent] = useState("");
+  const tutorialRef = useRef<HTMLDivElement>(null);
 
-	useEffect(() => {
-		setTutorialContent(tutorial);
-		console.log(tutorial);
-	}, [tutorial]);
-	const formatTutorial = (content: string): string => {
-		const lines = content.split('\n');
-		let formattedContent = '';
-		let inCodeBlock = false;
-		let codeBlockContent = '';
-		let codeLanguage = '';
+  useEffect(() => {
+    setTutorialContent(tutorial);
+  }, [tutorial]);
 
-		const processCodeBlock = () => {
-			if (codeBlockContent.trim()) {
-				formattedContent += `<pre class="code-block" data-language="${codeLanguage}"><code>${codeBlockContent.trim()}</code></pre>`;
-			}
-			inCodeBlock = false;
-			codeBlockContent = '';
-			codeLanguage = '';
-		};
+  const handleDownloadPDF = async () => {
+    if (tutorialRef.current) {
+      // Temporarily remove the overflow restriction and expand the element to fit all content
+      const originalHeight = tutorialRef.current.style.height;
+      tutorialRef.current.style.height = "auto";
+      tutorialRef.current.style.maxHeight = "none";
+      tutorialRef.current.style.overflowY = "visible";
 
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i].trim();
+      // Use html2canvas to capture the entire area
+      const canvas = await html2canvas(tutorialRef.current, {
+        scale: 1.5, // Reduced scale for smaller file size
+        useCORS: true,
+      });
 
-			if (line.startsWith('```') || line.startsWith("'''")) {
-				if (inCodeBlock) {
-					processCodeBlock();
-				} else {
-					inCodeBlock = true;
-					codeLanguage = line.slice(3).trim();
-				}
-			} else if (inCodeBlock) {
-				codeBlockContent += line + '\n';
-			} else {
-				// Improved normal text processing
-				const processedLine = line
-					.replace(
-						/^(#{1,6})\s(.+)$/,
-						(_, hashes, text) =>
-							`<h${hashes.length} class="title">${text}</h${hashes.length}>`
-					)
-					.replace(/^([A-Z][\w\s]+:)$/, '<h2 class="subtitle">$1</h2>')
-					.replace(
-						/^(\d+\.?\s?)(.+)$/,
-						'<div class="list-item"><strong>$1</strong> $2</div>'
-					)
-					.replace(/^-\s(.+)$/, '<li>$1</li>')
-					.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+      // Restore the original styles
+      tutorialRef.current.style.height = originalHeight;
+      tutorialRef.current.style.maxHeight = "700px";
+      tutorialRef.current.style.overflowY = "auto";
 
-				formattedContent += processedLine + '\n';
-			}
+      // Convert to JPEG format for smaller file size
+      const imgData = canvas.toDataURL("image/jpeg", 0.75); // 0.75 is the quality level (0 to 1)
 
-			// Check for potential unlabeled code blocks
-			if (!inCodeBlock && i < lines.length - 3) {
-				const nextLines = lines.slice(i + 1, i + 4).join('\n');
-				if (
-					nextLines.match(/^\s*(var|let|const|function|if|for|while|class)\s/m)
-				) {
-					inCodeBlock = true;
-					codeLanguage = 'javascript'; // Assume JavaScript as default
-					i++; // Skip the next line as it's the start of the code block
-				}
-			}
-		}
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
 
-		// Process any remaining code block
-		if (inCodeBlock) {
-			processCodeBlock();
-		}
+      let position = 0;
 
-		return formattedContent.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>');
-	};
-	const handleDownloadPDF = () => {
-		const doc = new jsPDF();
-		const pageWidth = doc.internal.pageSize.getWidth();
-		const pageHeight = doc.internal.pageSize.getHeight();
-		const margin = 10;
-		const maxWidth = pageWidth - 2 * margin;
+      pdf.addImage(
+        imgData,
+        "JPEG",
+        0,
+        position,
+        imgWidth,
+        imgHeight,
+        undefined,
+        "FAST"
+      ); // 'FAST' for compression
+      heightLeft -= pageHeight;
 
-		let y = margin;
-		const lines = tutorial.split('\n');
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          0,
+          position,
+          imgWidth,
+          imgHeight,
+          undefined,
+          "FAST"
+        );
+        heightLeft -= pageHeight;
+      }
 
-		doc.setFont('helvetica');
-		doc.setFontSize(12);
+      pdf.save("tutorial.pdf");
+    }
+  };
 
-		lines.forEach((line) => {
-			if (y > pageHeight - margin) {
-				doc.addPage();
-				y = margin;
-			}
-
-			const words = line.split(' ');
-			let currentLine = '';
-
-			words.forEach((word) => {
-				const testLine = currentLine + (currentLine ? ' ' : '') + word;
-				const testWidth = doc.getTextWidth(testLine);
-
-				if (testWidth > maxWidth) {
-					doc.text(currentLine, margin, y);
-					y += 7;
-					currentLine = word;
-
-					if (y > pageHeight - margin) {
-						doc.addPage();
-						y = margin;
-					}
-				} else {
-					currentLine = testLine;
-				}
-			});
-
-			if (currentLine) {
-				doc.text(currentLine, margin, y);
-				y += 7;
-			}
-
-			y += 3; // Add extra space between paragraphs
-		});
-
-		doc.save('tutorial.pdf');
-	};
-
-	const copyToClipboard = (text: string) => {
-		navigator.clipboard.writeText(text).then(() => {
-			alert('Code copied to clipboard!');
-		});
-	};
-
-	const parseOptions: HTMLReactParserOptions = {
-		replace: (domNode) => {
-			if (!domNode) {
-				return;
-			}
-			if (domNode instanceof Text) {
-				return (
-					<ReactMarkdown
-						rehypePlugins={[rehypeRaw]}
-						remarkPlugins={[remarkGfm]}
-					>
-						{domNode.nodeValue ? domNode.nodeValue : ''}
-					</ReactMarkdown>
-				);
-			}
-			return domToReact([domNode]);
-		},
-	};
-
-	return (
-		<Card variant='outlined'>
-			<CardContent>
-				<Typography
-					variant='h6'
-					gutterBottom
-				>
-					Project Tutorial
-				</Typography>
-				<Box
-					sx={{
-						maxHeight: '700px',
-						overflowY: 'auto',
-						border: '1px solid #ccc',
-						borderRadius: '8px',
-						padding: '16px',
-						backgroundColor: '#f9f9f9',
-						boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-            position: 'relative',
-            display: 'flex',
-            justifyContent: 'center',
-					}}
-				>
-					<ReactMarkdown
-						remarkPlugins={[remarkGfm]}
-						className='prose w-full'
-						// rehypePlugins={[rehypeRaw]}
-					>
-						{tutorialContent}
-					</ReactMarkdown>
-						{/* <MuiMarkdown
-							Highlight={Highlight}
-							themes={themes}
-							prismTheme={themes.github}
-						>
-							{tutorialContent}
-						</MuiMarkdown> */}
-				</Box>
-				<Button
-					variant='contained'
-					color='primary'
-					onClick={handleDownloadPDF}
-					sx={{ marginTop: '16px' }}
-				>
-					Download PDF
-				</Button>
-			</CardContent>
-		</Card>
-	);
+  return (
+    <Card variant="outlined">
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Project Tutorial
+        </Typography>
+        <Box
+          ref={tutorialRef}
+          sx={{
+            maxHeight: "700px",
+            overflowY: "auto",
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "16px",
+            backgroundColor: "#f9f9f9",
+            boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+            position: "relative",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose w-full">
+            {tutorialContent}
+          </ReactMarkdown>
+        </Box>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleDownloadPDF}
+          sx={{ marginTop: "16px" }}
+        >
+          Download PDF
+        </Button>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default ProjectTutorial;

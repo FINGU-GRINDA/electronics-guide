@@ -21,6 +21,7 @@
     "framer-motion": "^11.3.21",
     "html-react-parser": "^5.1.12",
     "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.2",
     "install": "^0.13.0",
     "jspdf": "^2.5.1",
     "mui-markdown": "^1.1.14",
