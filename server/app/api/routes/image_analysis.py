@@ -11,8 +11,11 @@ router = APIRouter()
 @router.post("/analyze_image/", response_model=ImageAnalysisResponse)
 async def analyze_image_endpoint(file: UploadFile = File(...)):
     image_data = await file.read()
-    response = analyze_image(image_data)
+    
+    # Await the analyze_image function to get the result
+    response = await analyze_image(image_data)
+    
     if not response["project_ideas"]:
         raise HTTPException(status_code=500, detail="Failed to generate project ideas")
+    
     return ImageAnalysisResponse(**response)
-

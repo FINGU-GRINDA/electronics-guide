@@ -17,18 +17,17 @@ logger = logging.getLogger(__name__)
 
 
 # Initialize models
-mm_llm = GeminiMultiModal(model_name="models/gemini-1.5-flash-latest", temperature=0.7, api_key=settings.GOOGLE_API_KEY)
 
 # Function to encode image to base64
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
-
-# Agent 1: Image Analysis and Project Ideas
-def analyze_image_and_suggest_projects(image_path: str) -> str:
+async def analyze_image_and_suggest_projects(image_path: str) -> str:
     logger.debug(f"Analyzing image: {image_path}")
     image_doc = ImageDocument(image_path=image_path)
-    response = mm_llm.complete(
+    
+    # Await the coroutine to get the response
+    response = await client.acomplete(
         prompt="""Analyze this image of electronic parts and provide the following:
         1. A list of all identifiable electronic components in the image.
         2. Suggest 4 project ideas that can be created with these components. Number each idea from 1 to 4.
@@ -45,69 +44,11 @@ def analyze_image_and_suggest_projects(image_path: str) -> str:
         """,
         image_documents=[image_doc]
     )
+    
+    # Now, response.text should be accessible since we awaited the response
     return response.text
 
-# Agent 2: Project Implementation Details
-async def provide_project_details(project: str) -> str:
-    response = client.chat.completions.create(
-        model="tiiuae/falcon-180B-chat",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": f"""Provide a brief overview of how to implement this electronic project: {project}
-            Include:
-            1. A list of main components needed
-            2. Basic steps to connect the components
-            3. A brief description of how the project works
-            Format the response in modern, styled HTML. Use advanced HTML5 and CSS3 techniques to ensure a polished and professional look."""}
-        ],
-        max_tokens=1000,
-        temperature=0.7,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0
-    )
-    
-    return response.choices[0].message.content
 
-
-# Agent 3: Gemini Tutorial Generator
-
-# Update the generator function to yield each section
-# def generate_gemini_tutorial(project: str, overview: str) -> Generator[str, None, None]:
-#     sections = [
-#         "1. Introduction to the project",
-#         "2. List of components and tools needed",
-#         "3. Step-by-step instructions",
-#         "4. Circuit diagram or wiring instructions",
-#         "5. Code explanation",
-#         "6. Troubleshooting guide",
-#         "7. Safety precautions",
-#         "8. Conclusion"
-#     ]
-
-#     full_tutorial = f"# {project}\n\n"
-
-#     for section in sections:
-#         prompt = f"""Based on the following project and overview, generate content for this section of the tutorial:
-
-#         Project: {project}
-#         Overview: {overview}
-
-#         Section: {section}
-
-#         Provide detailed explanations and keep the response under 1000 words.
-#         If this section involves code, provide a detailed code example with comments. the code should be completed not half one."""
-
-#         response = mm_llm.complete(prompt=prompt)
-#         content = response.text
-
-#         full_tutorial += f"\n\n## {section}\n\n{content}"
-#         yield {
-#             "section": section,
-#             "content": content
-#         }
-
-#     yield full_tutorial
 
 class GraphState(TypedDict):
     image_path: str
@@ -119,13 +60,16 @@ class GraphState(TypedDict):
 # Define the idea workflow
 def define_idea_workflow() -> StateGraph:
     workflow = StateGraph(GraphState)
-
-    def image_analysis_node(state: GraphState) -> GraphState:
+    async def image_analysis_node(state: GraphState) -> GraphState:
         logger.debug(f"Executing image_analysis_node with initial state: {state}")
+        
+        # Await the coroutine to get the result
         if not state["project_ideas"]:
-            state["project_ideas"] = analyze_image_and_suggest_projects(state["image_path"])
+            state["project_ideas"] = await analyze_image_and_suggest_projects(state["image_path"])
+        
         logger.debug(f"State after image_analysis_node: {state}")
         return state
+
 
     workflow.add_node("image_analysis", image_analysis_node)
     workflow.set_entry_point("image_analysis")
@@ -133,8 +77,7 @@ def define_idea_workflow() -> StateGraph:
 
     return workflow
 
-
-def analyze_image(image_data: bytes) -> dict:
+async def analyze_image(image_data: bytes) -> dict:
     image_path = save_image_to_temp_file(image_data)
     initial_state = GraphState(
         image_path=image_path, 
@@ -143,10 +86,11 @@ def analyze_image(image_data: bytes) -> dict:
         project_overview="", 
         gemini_tutorial=""
     )
+    
     workflow = define_idea_workflow().compile()
 
     final_state = None
-    for output in workflow.stream(initial_state):
+    async for output in workflow.astream(initial_state):
         final_state = output
 
     logger.info(f"Final state after image analysis: {final_state}")
