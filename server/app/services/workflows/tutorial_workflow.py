@@ -1,10 +1,10 @@
+import asyncio
 import logging
 import json
-import asyncio
 from typing import AsyncGenerator, Dict
 from fastapi import APIRouter, Form
 from app.core.config import settings
-from .llm import   client
+from .llm import client  # Using your existing client
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -17,12 +17,16 @@ async def generate_section_content(project: str, section: str) -> AsyncGenerator
     If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done."""
 
     try:
-        response = await client.acomplete(prompt=prompt, image_documents=[])
+        # Stream content using your existing client
+        response_stream = await client.astream_complete(prompt=prompt,image_documents=[] )
 
-        # Assuming response.text contains the full response text
-        if response.text:
-            logger.debug(f"Streaming chunk for section '{section}': {response.text}")
-            yield {"section": section, "content": response.text}
+        # Streaming the response word by word
+        async for chunk in response_stream:
+            if chunk.text:
+                words = chunk.text.split()
+                for word in words:
+                    logger.debug(f"Streaming word for section '{section}': {word}")
+                    yield {"section": section, "content": word + " "}  # Add a space after each word
     except Exception as e:
         logger.error(f"Error generating content for section '{section}': {e}")
         yield {"section": section, "content": f"Error generating content: {str(e)}"}
@@ -35,12 +39,16 @@ async def provide_project_details(project: str) -> AsyncGenerator[Dict[str, str]
     3. A brief description of how the project works"""
 
     try:
-        response = await client.acomplete(prompt=prompt, image_documents=[])
+        # Stream content using your existing client
+        response_stream = await client.astream_complete(prompt=prompt,image_documents=[])
 
-        # Assuming response.text contains the full response text
-        if response.text:
-            logger.debug(f"Streaming chunk for project overview: {response.text}")
-            yield {"project_overview": response.text}
+        # Streaming the response word by word
+        async for chunk in response_stream:
+            if chunk.text:
+                words = chunk.text.split()
+                for word in words:
+                    logger.debug(f"Streaming word for project overview: {word}")
+                    yield {"project_overview": word + " "}  # Add a space after each word
     except Exception as e:
         logger.error(f"Error generating project overview: {e}")
         yield {"project_overview": f"Error generating project overview: {str(e)}"}
