@@ -13,7 +13,7 @@ from ai71 import AI71
 
 client = AI71(settings.AI71_API_KEY)
 
-mm_llm = GeminiMultiModal(model_name="models/gemini-1.5-flash-latest", temperature=0.7, api_key=settings.GOOGLE_API_KEY)
+# mm_llm = GeminiMultiModal(model_name="models/gemini-1.5-flash-latest", temperature=0.7, api_key=settings.GOOGLE_API_KEY)
 
 
 async def provide_project_details(project: str) -> str:
