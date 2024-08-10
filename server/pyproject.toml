@@ -29,6 +29,9 @@ weasyprint = "^62.3"
 reportlab = "^4.2.2"
 openai = "^1.38.0"
 ai71 = "^0.0.18"
+beautifulsoup4 = "^4.12.3"
+requests = "^2.32.3"
+llama-index-readers-web = "^0.1.23"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
