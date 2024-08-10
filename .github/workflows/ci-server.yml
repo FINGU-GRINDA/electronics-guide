@@ -1,0 +1,32 @@
+name: ci-server
+
+# This workflow will trigger on pull request master
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - server/**
+
+jobs:
+  server_ci:
+    name: CI Server
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./server
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - name: Setup env
+        uses: alekangelov/secret-envfile@v1
+        with:
+          content: ${{ secrets.SERVER_ENVFILE_DEV }}
+          filename: server/.env
+      - name: Install Deps
+        run: |
+          pip install poetry==1.7.1
+          poetry install
