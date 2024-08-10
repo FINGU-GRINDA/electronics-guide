@@ -51,8 +51,6 @@ const UploadPage: React.FC = () => {
       const controller = new AbortController();
       setAbortController(controller);
 
-      let projectOverviewCompleted = false; // Flag to determine when to handle the project title
-
       try {
         await getProjectDetails(
           file,
@@ -61,7 +59,6 @@ const UploadPage: React.FC = () => {
             if (data.project_overview) {
               // Handle the project overview first
               setTutorial((prev) => prev + data.project_overview);
-              projectOverviewCompleted = true; // Set flag to true after overview
             } else if (data.section && data.content) {
               // Handle the regular section content
               setTutorial((prev) => prev + data.content);

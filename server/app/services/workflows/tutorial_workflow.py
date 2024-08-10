@@ -2,11 +2,10 @@ import asyncio
 import logging
 import json
 from typing import AsyncGenerator, Dict
+from app.core.config import Settings
 from app.services.memory.section_summary_memory import CustomMemoryBuffer
-from app.utils.markdown import process_markdown
+from app.services.workflows.tools.tavily.search_tool import fetch_relevant_image
 from app.utils.save_image_to_temp import consume_async_generator
-from fastapi import APIRouter, Form
-from app.core.config import settings
 from app.constants.prompts import Prompts  # Import prompts
 from app.constants.section_titles import SectionTitles  # Import section titles
 from app.services.llm import client  # Your existing Gemini client
@@ -31,7 +30,12 @@ async def generate_section_content(project: str, section: SectionTitles) -> Asyn
             if chunk.text:
                 full_content += chunk.text
                 yield {"section": section.value, "content": chunk.text}
-        
+        image_path = await fetch_relevant_image(section.value, project)
+        if image_path:
+            image_markdown = f"![{section.value} image]({image_path})\n\n"
+            logger.debug(f"Image markdown: {image_markdown}")
+            yield {"section": section.value, "content": image_markdown}
+
         # Generate a summary using the client
         summary_prompt = Prompts.GENERATE_SUMMARY.value.format(section=section.value, project=project, full_content=full_content)
         
@@ -45,7 +49,6 @@ async def generate_section_content(project: str, section: SectionTitles) -> Asyn
     except Exception as e:
         logger.error(f"Error generating content for section '{section.value}': {e}")
         yield {"section": section.value, "content": f"Error generating content: {str(e)}"}
-
 async def provide_project_details(project: str) -> AsyncGenerator[Dict[str, str], None]:
     prompt = Prompts.PROVIDE_PROJECT_DETAILS.value.format(project=project)
 
