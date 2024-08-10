@@ -1,4 +1,3 @@
-// UploadPage.tsx
 import React, { useState } from "react";
 import {
   Container,
@@ -21,7 +20,8 @@ const UploadPage: React.FC = () => {
   const [projectIdeas, setProjectIdeas] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [tutorial, setTutorial] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false); // For image analysis and get project details
+  const [ideasLoading, setIdeasLoading] = useState<boolean>(false); // For refreshing project ideas
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
 
@@ -29,8 +29,8 @@ const UploadPage: React.FC = () => {
     setFile(file);
   };
 
-  const handleAnalyzeImage = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleAnalyzeImage = async (event?: React.FormEvent) => {
+    if (event) event.preventDefault();
     if (file) {
       setLoading(true);
       const data = await analyzeImage(file);
@@ -47,7 +47,7 @@ const UploadPage: React.FC = () => {
 
   const handleGetProjectDetails = async () => {
     if (file && selectedProject !== null) {
-      setLoading(true);
+      setLoading(true); // Only affect the loading for get project details
       setTutorial("");
       const controller = new AbortController();
       setAbortController(controller);
@@ -72,7 +72,19 @@ const UploadPage: React.FC = () => {
           console.error("Error during streaming:", error);
         }
       }
-      setLoading(false);
+      setLoading(false); // End the loading state for get project details
+    }
+  };
+
+  const handleRefreshIdeas = async () => {
+    if (file) {
+      setIdeasLoading(true); // Start loading for refresh
+      const data = await analyzeImage(file);
+      console.log("Refreshed Project Ideas: ", data);
+
+      const projectIdeasData = data.project_ideas || [];
+      setProjectIdeas(projectIdeasData);
+      setIdeasLoading(false); // Stop loading after refresh
     }
   };
 
@@ -90,7 +102,7 @@ const UploadPage: React.FC = () => {
             onFileChange={handleFileChange}
             onAnalyzeImage={handleAnalyzeImage}
             file={file}
-            loading={loading}
+            loading={loading} // Linked to general analysis and get project details
           />
 
           <Box mt={4}>
@@ -100,7 +112,9 @@ const UploadPage: React.FC = () => {
                 projectIdeas={projectIdeas}
                 selectedProject={selectedProject}
                 onSelectProject={setSelectedProject}
-                onGetProjectDetails={handleGetProjectDetails}
+                onGetProjectDetails={handleGetProjectDetails} // Trigger original loading
+                onRefreshIdeas={handleRefreshIdeas} // Separate refresh function with its own loading
+                loading={ideasLoading} // Separate loading state for refreshing ideas
               />
             )}
           </Box>

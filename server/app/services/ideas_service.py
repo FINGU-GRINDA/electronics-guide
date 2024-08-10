@@ -1,54 +1,55 @@
 import json
 import os
 from typing import Dict, Generator, TypedDict, Any
+from app.services.memory.ideas_memory import ProjectMemory
 from llama_index.multi_modal_llms.gemini import GeminiMultiModal
 from llama_index.core.schema import ImageDocument
 from langgraph.graph import StateGraph, END
 import logging
-
 import base64
 from .workflows.llm import client
-
-from ..core.config import settings  # Import the settings object
+from ..core.config import settings
 from app.utils.save_image_to_temp import save_image_to_temp_file
+import random
+import re
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Initialize memory
+project_memory = ProjectMemory()
 
-# Initialize models
-
-# Function to encode image to base64
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
+
 async def analyze_image_and_suggest_projects(image_path: str) -> str:
     logger.debug(f"Analyzing image: {image_path}")
     image_doc = ImageDocument(image_path=image_path)
     
-    # Await the coroutine to get the response
-    response = await client.acomplete(
-        prompt="""Analyze this image of electronic parts and provide the following:
-        1. A list of all identifiable electronic components in the image.
-        2. Suggest 4 project ideas that can be created with these components. Number each idea from 1 to 4.
-        
-        Format your response as follows:
-        Components:
-        - [List of components]
+    previous_projects = project_memory.get_previous_projects()
+    previous_projects_str = "\n".join(f"- {project}" for project in previous_projects) if previous_projects else "No previous projects."
 
-        Project Ideas:
-        1. [Project 1]
-        2. [Project 2]
-        3. [Project 3]
-        4. [Project 4]
-        """,
-        image_documents=[image_doc]
-    )
+    prompt = f"""Analyze this image of electronic parts and provide the following:
+    1. A list of all identifiable electronic components in the image.
+    2. Suggest 4 random, unique, and creative project ideas that can be created with these components. Ensure each title is detailed and imaginative.
     
-    # Now, response.text should be accessible since we awaited the response
+    Previous project titles (do not repeat these or create very similar ideas):
+    {previous_projects_str}
+    
+    Format your response as follows:
+    Components:
+    - [List of components]
+
+    Project Ideas:
+    1. [Project 1 Title]: [Brief description]
+    2. [Project 2 Title]: [Brief description]
+    3. [Project 3 Title]: [Brief description]
+    4. [Project 4 Title]: [Brief description]
+    """
+
+    response = await client.acomplete(prompt=prompt, image_documents=[image_doc])
     return response.text
-
-
 
 class GraphState(TypedDict):
     image_path: str
@@ -57,19 +58,17 @@ class GraphState(TypedDict):
     project_overview: str
     gemini_tutorial: str
 
-# Define the idea workflow
 def define_idea_workflow() -> StateGraph:
     workflow = StateGraph(GraphState)
+    
     async def image_analysis_node(state: GraphState) -> GraphState:
         logger.debug(f"Executing image_analysis_node with initial state: {state}")
         
-        # Await the coroutine to get the result
         if not state["project_ideas"]:
             state["project_ideas"] = await analyze_image_and_suggest_projects(state["image_path"])
         
         logger.debug(f"State after image_analysis_node: {state}")
         return state
-
 
     workflow.add_node("image_analysis", image_analysis_node)
     workflow.set_entry_point("image_analysis")
@@ -115,6 +114,9 @@ async def analyze_image(image_data: bytes) -> dict:
 
         components = [comp.strip() for comp in components.split("Components:")[1].strip().split("-") if comp.strip()]
         project_ideas = [idea.strip() for idea in projects.strip().split("\n") if idea.strip()]
+
+        # Add new project ideas to memory
+        project_memory.add_projects(project_ideas)
 
         return {"components": components, "project_ideas": project_ideas}
     except Exception as e:
