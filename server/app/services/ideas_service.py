@@ -7,7 +7,7 @@ from llama_index.core.schema import ImageDocument
 from langgraph.graph import StateGraph, END
 import logging
 import base64
-from .workflows.llm import client
+from .llm import client
 from ..core.config import settings
 from app.utils.save_image_to_temp import save_image_to_temp_file
 import random
