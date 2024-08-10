@@ -12,14 +12,18 @@ from .llm import client  # Your existing Gemini client
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 section_titles = [
-    "1. Introduction to the project",
-    "2. List of components and tools needed",
-    "3. Step-by-step instructions",
-    "4. Circuit diagram or wiring instructions",
-    "5. Code explanation",
-    "6. Troubleshooting guide",
-    "7. Safety precautions",
-    "8. Conclusion"
+    "1. Project Overview and Objectives",
+    "2. Components and Tools Needed",
+    "3. Setting Up Your Workspace and Safety Tips",
+    "4. Written Wiring Instructions (If Applicable)",
+    "5. Setting Up Your Development Environment",
+    "6. Core Code: Writing and Explanation",
+    "7. Code Expansion: Adding Features",
+    "8. Code Testing and Debugging",
+    "9. Final Integration: Bringing It All Together",
+    "10. Troubleshooting and Optimization",
+    "11. Best Practices and Precautions",
+    "12. Project Conclusion and Next Steps"
 ]
 
 
@@ -30,24 +34,26 @@ async def generate_section_content(project: str, section: str) -> AsyncGenerator
     history_text = memory.get()
 
     prompt = f"""
-    You are an expert at writing structured tutorials with proper Markdown formatting. Please generate content for the following section of a project tutorial:
-    
-    Project: {project}
-    Section: {section}
-    
-    Previous content summary:
+    You are an expert in creating detailed and user-friendly project tutorials. Please generate content for the following section of a project tutorial:
+
+    **Project Name:** {project}
+    **Section Title:** {section}
+
+    **Context from Previous Sections:**
     {history_text}
 
-    Requirements:
-    - Use appropriate Markdown syntax for headers, lists, and code blocks.
-    - Start with a header for the section title.
-    - For any list of items, use either ordered or unordered lists as appropriate.
-    - If including code, format it using triple backticks (```), specify the language, and ensure the code is indented properly.
-    - Ensure there are proper line breaks and paragraphs.
-    - Avoid unnecessary punctuation or random line breaks.
-    - Refer to information from previous sections when relevant.
+    **Content Requirements:**
+    - Use clear and concise language that guides the user through each step.
+    - Begin with a relevant and engaging header for the section title.
+    - Include lists, bullet points, or steps where applicable for better readability.
+    - For code sections, provide complete, fully functional, and well-commented code examples within triple backticks (```).
+    - Ensure that the code is not truncated or incomplete. If the code is lengthy, break it into logical segments, but ensure each segment is fully functional and runnable on its own.
+    - For wiring instructions, provide detailed, step-by-step written instructions, specifying each connection clearly without relying on circuit diagrams. Describe the wiring process using text only.
+    - Ensure the content is formatted properly with appropriate Markdown syntax for headings, lists, and code blocks.
+    - Reference relevant details from previous sections for continuity.
+    - Tailor the content to be under 1000 words while covering all necessary information comprehensively.
 
-    Provide detailed explanations and keep the response under 1000 words. If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done.
+    **Goal:** Provide actionable and easy-to-follow instructions that empower the user to complete this part of the project confidently.
     """
 
     try:
@@ -78,12 +84,14 @@ async def generate_section_content(project: str, section: str) -> AsyncGenerator
         logger.error(f"Error generating content for section '{section}': {e}")
         yield {"section": section, "content": f"Error generating content: {str(e)}"}
 
+
+
 async def provide_project_details(project: str) -> AsyncGenerator[Dict[str, str], None]:
-    prompt = f"""Provide a brief overview of how to implement this electronic project: {project}
-    Include:
-    1. A list of main components needed
-    2. Basic steps to connect the components
-    3. A brief description of how the project works"""
+    prompt = f"""Provide a Project Title and a very short description for this project: {project}
+   
+    -Ensure the content is formatted properly with appropriate Markdown syntax for headings
+    
+"""
 
     try:
         response_stream = await client.astream_complete(prompt=prompt, image_documents=[])
@@ -97,8 +105,11 @@ async def provide_project_details(project: str) -> AsyncGenerator[Dict[str, str]
         logger.error(f"Error generating project overview: {e}")
         yield {"project_overview": f"Error generating project overview: {str(e)}"}
 
-
 async def provide_project_details_service(project: str) -> AsyncGenerator[str, None]:
+    # First, yield the project title
+    yield json.dumps({"project_title": project})
+
+    # Then, continue with the tasks for project details and section content
     tasks = [
         consume_async_generator(provide_project_details(project))
     ] + [

@@ -9,8 +9,8 @@ class CustomMemoryBuffer:
         self.memory.append(content)
         # Implement token counting and truncation logic here if needed
         # For simplicity, we're just keeping a fixed number of recent items
-        if len(self.memory) > 5:
-            self.memory = self.memory[-5:]
+        if len(self.memory) > 7:
+            self.memory = self.memory[-7:]
 
     def get(self):
         return "\n\n".join(self.memory)
