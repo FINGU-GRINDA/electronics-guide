@@ -2,6 +2,7 @@ import asyncio
 import logging
 import json
 from typing import AsyncGenerator, Dict
+from app.services.memory.section_summary_memory import CustomMemoryBuffer
 from app.utils.markdown import process_markdown
 from app.utils.save_image_to_temp import consume_async_generator
 from fastapi import APIRouter, Form
@@ -10,22 +11,17 @@ from .llm import client  # Your existing Gemini client
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+section_titles = [
+    "1. Introduction to the project",
+    "2. List of components and tools needed",
+    "3. Step-by-step instructions",
+    "4. Circuit diagram or wiring instructions",
+    "5. Code explanation",
+    "6. Troubleshooting guide",
+    "7. Safety precautions",
+    "8. Conclusion"
+]
 
-# Custom memory class to work with your Gemini client
-class CustomMemoryBuffer:
-    def __init__(self, max_token_limit=1000):
-        self.memory = []
-        self.max_token_limit = max_token_limit
-
-    def add(self, content):
-        self.memory.append(content)
-        # Implement token counting and truncation logic here if needed
-        # For simplicity, we're just keeping a fixed number of recent items
-        if len(self.memory) > 5:
-            self.memory = self.memory[-5:]
-
-    def get(self):
-        return "\n\n".join(self.memory)
 
 # Initialize the custom memory buffer
 memory = CustomMemoryBuffer()
@@ -101,16 +97,6 @@ async def provide_project_details(project: str) -> AsyncGenerator[Dict[str, str]
         logger.error(f"Error generating project overview: {e}")
         yield {"project_overview": f"Error generating project overview: {str(e)}"}
 
-section_titles = [
-    "1. Introduction to the project",
-    "2. List of components and tools needed",
-    "3. Step-by-step instructions",
-    "4. Circuit diagram or wiring instructions",
-    "5. Code explanation",
-    "6. Troubleshooting guide",
-    "7. Safety precautions",
-    "8. Conclusion"
-]
 
 async def provide_project_details_service(project: str) -> AsyncGenerator[str, None]:
     tasks = [

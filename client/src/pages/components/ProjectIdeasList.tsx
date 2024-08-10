@@ -9,15 +9,20 @@ import {
   Typography,
   Card,
   CardContent,
+  IconButton,
+  CircularProgress,
 } from "@mui/material";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 interface ProjectIdeasListProps {
   projectIdeas: string[];
   selectedProject: string | null;
   onSelectProject: (idea: string) => void;
   onGetProjectDetails: () => void;
+  onRefreshIdeas: () => void;
+  loading: boolean; // Loading state specific to this component
 }
 
 const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
@@ -25,6 +30,8 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
   selectedProject,
   onSelectProject,
   onGetProjectDetails,
+  onRefreshIdeas,
+  loading, // Receive the loading state specific to this component
 }) => {
   return (
     <Box className="p-6 bg-gray-100 shadow-lg rounded-xl">
@@ -35,12 +42,30 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
       >
         <Card className="mb-4">
           <CardContent>
-            <Typography
-              variant="h5"
-              className="text-center text-2xl font-bold text-gray-700 mb-4"
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
             >
-              Project Ideas
-            </Typography>
+              <Typography
+                variant="h5"
+                className="text-center text-2xl font-bold text-gray-700"
+              >
+                Project Ideas
+              </Typography>
+              <IconButton
+                onClick={onRefreshIdeas}
+                color="primary"
+                className="transition duration-300 ease-in-out transform hover:scale-110"
+                disabled={loading} // Disable the button during loading
+              >
+                {loading ? (
+                  <CircularProgress size={24} /> // Show loading spinner during refresh
+                ) : (
+                  <RefreshIcon />
+                )}
+              </IconButton>
+            </Box>
           </CardContent>
         </Card>
       </motion.div>
