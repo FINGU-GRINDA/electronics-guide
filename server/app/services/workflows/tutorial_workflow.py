@@ -29,7 +29,6 @@ class CustomMemoryBuffer:
 
 # Initialize the custom memory buffer
 memory = CustomMemoryBuffer()
-
 async def generate_section_content(project: str, section: str) -> AsyncGenerator[Dict[str, str], None]:
     # Get the current memory content
     history_text = memory.get()
@@ -64,8 +63,18 @@ async def generate_section_content(project: str, section: str) -> AsyncGenerator
                 full_content += chunk.text
                 yield {"section": section, "content": chunk.text}
         
-        # Add a summary of the generated content to the memory
-        summary = f"Summary of {section}: " + full_content[:200] + "..."  # Simple summarization
+        # Generate a summary using the client
+        summary_prompt = f"""
+        Please provide a concise summary of the following content for the section "{section}" of the project "{project}". 
+        The summary should be about 2-3 sentences long and capture the key points:
+
+        {full_content}
+        """
+        
+        summary_response = await client.acomplete(prompt=summary_prompt, image_documents=[])
+        summary = f"Summary of {section}: {summary_response.text}"
+        
+        # Add the generated summary to the memory
         memory.add(summary)
         
         yield {"section": section, "content": "\n\n"}
