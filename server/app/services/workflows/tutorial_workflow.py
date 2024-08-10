@@ -6,17 +6,43 @@ from app.utils.markdown import process_markdown
 from app.utils.save_image_to_temp import consume_async_generator
 from fastapi import APIRouter, Form
 from app.core.config import settings
-from .llm import client  # Using your existing client
+from .llm import client  # Your existing Gemini client
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# Custom memory class to work with your Gemini client
+class CustomMemoryBuffer:
+    def __init__(self, max_token_limit=1000):
+        self.memory = []
+        self.max_token_limit = max_token_limit
+
+    def add(self, content):
+        self.memory.append(content)
+        # Implement token counting and truncation logic here if needed
+        # For simplicity, we're just keeping a fixed number of recent items
+        if len(self.memory) > 5:
+            self.memory = self.memory[-5:]
+
+    def get(self):
+        return "\n\n".join(self.memory)
+
+# Initialize the custom memory buffer
+memory = CustomMemoryBuffer()
+
 async def generate_section_content(project: str, section: str) -> AsyncGenerator[Dict[str, str], None]:
+    # Get the current memory content
+    history_text = memory.get()
+
     prompt = f"""
     You are an expert at writing structured tutorials with proper Markdown formatting. Please generate content for the following section of a project tutorial:
     
     Project: {project}
     Section: {section}
     
+    Previous content summary:
+    {history_text}
+
     Requirements:
     - Use appropriate Markdown syntax for headers, lists, and code blocks.
     - Start with a header for the section title.
@@ -24,6 +50,7 @@ async def generate_section_content(project: str, section: str) -> AsyncGenerator
     - If including code, format it using triple backticks (```), specify the language, and ensure the code is indented properly.
     - Ensure there are proper line breaks and paragraphs.
     - Avoid unnecessary punctuation or random line breaks.
+    - Refer to information from previous sections when relevant.
 
     Provide detailed explanations and keep the response under 1000 words. If this section involves code, provide a detailed code example with comments. The code should be complete, not half-done.
     """
@@ -31,10 +58,16 @@ async def generate_section_content(project: str, section: str) -> AsyncGenerator
     try:
         response_stream = await client.astream_complete(prompt=prompt, image_documents=[])
 
+        full_content = ""
         async for chunk in response_stream:
             if chunk.text:
-                # No need to split by sentences if Markdown is properly generated
+                full_content += chunk.text
                 yield {"section": section, "content": chunk.text}
+        
+        # Add a summary of the generated content to the memory
+        summary = f"Summary of {section}: " + full_content[:200] + "..."  # Simple summarization
+        memory.add(summary)
+        
         yield {"section": section, "content": "\n\n"}
     except Exception as e:
         logger.error(f"Error generating content for section '{section}': {e}")
@@ -48,21 +81,17 @@ async def provide_project_details(project: str) -> AsyncGenerator[Dict[str, str]
     3. A brief description of how the project works"""
 
     try:
-        # Stream content using your existing client
-        response_stream = await client.astream_complete(prompt=prompt,image_documents=[])
+        response_stream = await client.astream_complete(prompt=prompt, image_documents=[])
 
-        # Streaming the response in larger chunks (e.g., sentences)
         async for chunk in response_stream:
             if chunk.text:
                 yield {"project_overview": chunk.text}
-                # sentences = chunk.text.split('. ')
-                # for sentence in sentences:
-                #     yield {"project_overview": sentence + ". "}
         yield {"project_overview": "\n\n"}
         
     except Exception as e:
         logger.error(f"Error generating project overview: {e}")
         yield {"project_overview": f"Error generating project overview: {str(e)}"}
+
 section_titles = [
     "1. Introduction to the project",
     "2. List of components and tools needed",
@@ -74,7 +103,6 @@ section_titles = [
     "8. Conclusion"
 ]
 
-
 async def provide_project_details_service(project: str) -> AsyncGenerator[str, None]:
     tasks = [
         consume_async_generator(provide_project_details(project))
@@ -85,9 +113,4 @@ async def provide_project_details_service(project: str) -> AsyncGenerator[str, N
 
     for task in tasks:
         async for chunk in task:
-            # with open('log.jsonl', 'a+') as f:
-            #     f.write(json.dumps(chunk) + '\n')
-            # processed_chunk = process_markdown(chunk.get('content', ''))
-            # chunk['content'] = processed_chunk
             yield json.dumps(chunk)
-            # await asyncio.sleep(0.1)
