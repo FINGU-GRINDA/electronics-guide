@@ -23,7 +23,7 @@ app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000, https://edison-server.192.3.155.238.sslip.io"],  # Allows requests from this origin
+    allow_origins=["http://localhost:3000, https://edison-client.192.3.155.238.sslip.io"],  # Allows requests from this origin
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
