@@ -1,8 +1,8 @@
 version: "3"
 services:
-  electronics-guide-client-prod:
-    container_name: electronics-guide-client-prod
-    image: v3n0mhkr/electronics-guide-client-prod
+  Edison-client-prod:
+    container_name: Edison-client-prod
+    image: v3n0mhkr/Edison-client-prod
     env_file:
       - ./client/.env
     build:
@@ -10,14 +10,14 @@ services:
       dockerfile: Dockerfile
       target: production
     networks:
-      - electronics-guide-prod
+      - Edison-prod
     ports:
       - "80:80"
 
 
-  electronics-guide-server-prod:
-    container_name: electronics-guide-server-prod
-    image: v3n0mhkr/electronics-guide-server-prod
+  Edison-server-prod:
+    container_name: Edison-server-prod
+    image: v3n0mhkr/Edison-server-prod
     env_file:
       - ./server/.env
     build:
@@ -25,11 +25,11 @@ services:
       dockerfile: Dockerfile
       target: production
     networks:
-      - electronics-guide-prod
+      - Edison-prod
     ports:
       - 8000:8000
 
 networks:
-  electronics-guide-prod:
-    name: electronics-guide-prod
+  Edison-prod:
+    name: Edison-prod
     external: false
