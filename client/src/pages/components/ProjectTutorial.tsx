@@ -80,9 +80,9 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
   };
 
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" sx={{ backgroundColor: "#2c2c2c" }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{ color: "#00bfa5" }}>
           Project Tutorial
         </Typography>
         <Box
@@ -90,17 +90,20 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
           sx={{
             maxHeight: "700px",
             overflowY: "auto",
-            border: "1px solid #ccc",
+            border: "1px solid #555",
             borderRadius: "8px",
             padding: "16px",
-            backgroundColor: "#f9f9f9",
-            boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+            backgroundColor: "#1e1e1e",
+            boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
             position: "relative",
             display: "flex",
             justifyContent: "center",
           }}
         >
-          <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose w-full">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            className="prose w-full text-gray-300"
+          >
             {tutorialContent}
           </ReactMarkdown>
         </Box>
@@ -108,7 +111,13 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
           variant="contained"
           color="primary"
           onClick={handleDownloadPDF}
-          sx={{ marginTop: "16px" }}
+          sx={{
+            marginTop: "16px",
+            backgroundColor: "#00bfa5",
+            "&:hover": {
+              backgroundColor: "#00897b",
+            },
+          }}
         >
           Download PDF
         </Button>

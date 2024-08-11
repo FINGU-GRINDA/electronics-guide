@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import {
   Container,
-  Card,
-  CardContent,
   Box,
   CircularProgress,
   IconButton,
+  Stack,
 } from "@mui/material";
 import StopIcon from "@mui/icons-material/Stop";
 import { analyzeImage, getProjectDetails } from "../services/api";
@@ -13,6 +12,7 @@ import FileUpload from "./components/FileUpload";
 import ComponentList from "./components/ComponentList";
 import ProjectIdeasList from "./components/ProjectIdeasList";
 import ProjectTutorial from "./components/ProjectTutorial";
+import { motion } from "framer-motion";
 
 const UploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -20,8 +20,8 @@ const UploadPage: React.FC = () => {
   const [projectIdeas, setProjectIdeas] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [tutorial, setTutorial] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false); // For image analysis and get project details
-  const [ideasLoading, setIdeasLoading] = useState<boolean>(false); // For refreshing project ideas
+  const [loading, setLoading] = useState<boolean>(false);
+  const [ideasLoading, setIdeasLoading] = useState<boolean>(false);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
 
@@ -44,14 +44,13 @@ const UploadPage: React.FC = () => {
       setLoading(false);
     }
   };
+
   const handleGetProjectDetails = async () => {
     if (file && selectedProject !== null) {
-      setLoading(true); // Only affect the loading for get project details
+      setLoading(true);
       setTutorial("");
       const controller = new AbortController();
       setAbortController(controller);
-
-      let projectOverviewCompleted = false; // Flag to determine when to handle the project title
 
       try {
         await getProjectDetails(
@@ -59,11 +58,8 @@ const UploadPage: React.FC = () => {
           selectedProject,
           (data) => {
             if (data.project_overview) {
-              // Handle the project overview first
               setTutorial((prev) => prev + data.project_overview);
-              projectOverviewCompleted = true; // Set flag to true after overview
             } else if (data.section && data.content) {
-              // Handle the regular section content
               setTutorial((prev) => prev + data.content);
             }
           },
@@ -76,19 +72,19 @@ const UploadPage: React.FC = () => {
           console.error("Error during streaming:", error);
         }
       }
-      setLoading(false); // End the loading state for get project details
+      setLoading(false);
     }
   };
 
   const handleRefreshIdeas = async () => {
     if (file) {
-      setIdeasLoading(true); // Start loading for refresh
+      setIdeasLoading(true);
       const data = await analyzeImage(file);
       console.log("Refreshed Project Ideas: ", data);
 
       const projectIdeasData = data.project_ideas || [];
       setProjectIdeas(projectIdeasData);
-      setIdeasLoading(false); // Stop loading after refresh
+      setIdeasLoading(false);
     }
   };
 
@@ -99,50 +95,90 @@ const UploadPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="xl" className="bg-white shadow-md rounded-lg p-4 mt-4">
-      <Card variant="outlined">
-        <CardContent>
-          <FileUpload
-            onFileChange={handleFileChange}
-            onAnalyzeImage={handleAnalyzeImage}
-            file={file}
-            loading={loading} // Linked to general analysis and get project details
-          />
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          {/* Add any additional content or headers here if needed */}
+        </Box>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        <FileUpload
+          onFileChange={handleFileChange}
+          onAnalyzeImage={handleAnalyzeImage}
+          file={file}
+          loading={loading}
+        />
+      </motion.div>
 
-          <Box mt={4}>
-            {components.length > 0 && <ComponentList components={components} />}
-            {projectIdeas.length > 0 && (
-              <ProjectIdeasList
-                projectIdeas={projectIdeas}
-                selectedProject={selectedProject}
-                onSelectProject={setSelectedProject}
-                onGetProjectDetails={handleGetProjectDetails} // Trigger original loading
-                onRefreshIdeas={handleRefreshIdeas} // Separate refresh function with its own loading
-                loading={ideasLoading} // Separate loading state for refreshing ideas
-              />
-            )}
-          </Box>
-          <Box mt={4}>
-            {tutorial && <ProjectTutorial tutorial={tutorial} />}
-          </Box>
-          {loading && (
-            <Box display="flex" justifyContent="center" mt={2}>
-              <CircularProgress />
-            </Box>
-          )}
-          {loading && (
-            <Box mt={2} display="flex" justifyContent="center">
-              <IconButton
-                color="secondary"
-                onClick={handleStopStreaming}
-                sx={{ border: "1px solid", borderRadius: "8px" }}
-              >
-                <StopIcon />
-              </IconButton>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+      <Stack spacing={4} mt={4}>
+        {components.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ComponentList components={components} />
+          </motion.div>
+        )}
+
+        {projectIdeas.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ProjectIdeasList
+              projectIdeas={projectIdeas}
+              selectedProject={selectedProject}
+              onSelectProject={setSelectedProject}
+              onGetProjectDetails={handleGetProjectDetails}
+              onRefreshIdeas={handleRefreshIdeas}
+              loading={ideasLoading}
+            />
+          </motion.div>
+        )}
+
+        {tutorial && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ProjectTutorial tutorial={tutorial} />
+          </motion.div>
+        )}
+      </Stack>
+
+      {loading && (
+        <Box display="flex" justifyContent="center" mt={4}>
+          <CircularProgress sx={{ color: "#00bfa5" }} />{" "}
+          {/* Updated to match the teal color */}
+        </Box>
+      )}
+      {loading && (
+        <Box mt={2} display="flex" justifyContent="center">
+          <IconButton
+            color="error"
+            onClick={handleStopStreaming}
+            sx={{
+              border: "1px solid",
+              borderRadius: "8px",
+              color: "#00bfa5", // Updated to match the teal color
+              borderColor: "#00bfa5", // Updated to match the teal color
+            }}
+          >
+            <StopIcon />
+          </IconButton>
+        </Box>
+      )}
     </Container>
   );
 };

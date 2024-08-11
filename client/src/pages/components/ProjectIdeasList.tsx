@@ -34,13 +34,19 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
   loading, // Receive the loading state specific to this component
 }) => {
   return (
-    <Box className="p-6 bg-gray-100 shadow-lg rounded-xl">
+    <Box
+      className="p-6"
+      sx={{ backgroundColor: "#1c1c1c", borderRadius: "16px" }}
+    >
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="mb-4">
+        <Card
+          className="mb-4"
+          sx={{ backgroundColor: "#2a2a2a", borderRadius: "12px" }}
+        >
           <CardContent>
             <Box
               display="flex"
@@ -49,7 +55,8 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
             >
               <Typography
                 variant="h5"
-                className="text-center text-2xl font-bold text-gray-700"
+                className="text-center text-2xl font-bold"
+                sx={{ color: "#ffffff" }}
               >
                 Project Ideas
               </Typography>
@@ -60,9 +67,9 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
                 disabled={loading} // Disable the button during loading
               >
                 {loading ? (
-                  <CircularProgress size={24} /> // Show loading spinner during refresh
+                  <CircularProgress size={24} sx={{ color: "#00bfa5" }} /> // Show loading spinner during refresh
                 ) : (
-                  <RefreshIcon />
+                  <RefreshIcon sx={{ color: "#00bfa5" }} />
                 )}
               </IconButton>
             </Box>
@@ -81,16 +88,18 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
                 button
                 onClick={() => onSelectProject(idea)}
                 selected={selectedProject === idea}
-                className={`bg-white hover:bg-gray-100 rounded-lg shadow-md transition duration-300 ease-in-out transform ${
-                  selectedProject === idea ? "bg-blue-50" : ""
+                className={`hover:bg-gray-700 rounded-lg shadow-md transition duration-300 ease-in-out transform ${
+                  selectedProject === idea ? "bg-gray-800" : "bg-gray-900"
                 }`}
               >
                 <ListItemText
                   primary={<ReactMarkdown>{idea}</ReactMarkdown>}
-                  primaryTypographyProps={{ className: "text-gray-600" }}
+                  primaryTypographyProps={{ className: "text-gray-300" }}
                 />
               </ListItem>
-              {index < projectIdeas.length - 1 && <Divider />}
+              {index < projectIdeas.length - 1 && (
+                <Divider sx={{ borderColor: "#555" }} />
+              )}
             </motion.div>
           </React.Fragment>
         ))}
@@ -108,9 +117,9 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
             fullWidth
             className="mt-4 py-2 text-lg font-semibold transition duration-300 ease-in-out transform hover:scale-105"
             sx={{
-              backgroundColor: "#3f51b5",
+              backgroundColor: "#00bfa5",
               "&:hover": {
-                backgroundColor: "#303f9f",
+                backgroundColor: "#00897b",
               },
             }}
           >
