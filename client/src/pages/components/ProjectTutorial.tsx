@@ -15,6 +15,15 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
 
   useEffect(() => {
     setTutorialContent(tutorial);
+    if (!tutorialRef.current) {
+      return;
+    } else {
+      const scrollBarHeight = tutorialRef.current.scrollHeight;
+      tutorialRef.current.scrollTo({
+        top: scrollBarHeight,
+        behavior: "smooth",
+      });
+    }
   }, [tutorial]);
 
   const handleDownloadPDF = async () => {

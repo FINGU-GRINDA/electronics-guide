@@ -83,15 +83,12 @@ const ProjectIdeasList: React.FC<ProjectIdeasListProps> = ({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
+              onClick={() => onSelectProject(idea)}
+              className={`hover:bg-[#305853] cursor-pointer rounded-lg shadow-md transition duration-300 ease-in-out transform ${
+                selectedProject === idea ? "bg-[#003f38]" : "bg-transparent"
+              }`}
             >
-              <ListItem
-                button
-                onClick={() => onSelectProject(idea)}
-                selected={selectedProject === idea}
-                className={`hover:bg-gray-700 rounded-lg shadow-md transition duration-300 ease-in-out transform ${
-                  selectedProject === idea ? "bg-gray-800" : "bg-gray-900"
-                }`}
-              >
+              <ListItem>
                 <ListItemText
                   primary={<ReactMarkdown>{idea}</ReactMarkdown>}
                   primaryTypographyProps={{ className: "text-gray-300" }}
