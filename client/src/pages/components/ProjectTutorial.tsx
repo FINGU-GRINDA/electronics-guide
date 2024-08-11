@@ -102,7 +102,7 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
         >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            className="prose w-full text-gray-300"
+            className="prose w-full text-white prose-a:text-white prose-ul:text-white prose-li:text-white prose-ol:text-white prose-strong:text-white prose-h3:text-white prose-h1:text-white prose-h2:text-white marker:text-white"
           >
             {tutorialContent}
           </ReactMarkdown>
