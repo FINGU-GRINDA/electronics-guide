@@ -64,20 +64,28 @@ const FileUpload: React.FC<FileUploadProps> = ({
             ) : (
               <>
                 <svg
-                  aria-hidden="true"
-                  className="w-10 h-10 mb-3 text-gray-400"
+                  width="24"
+                  height="26"
+                  viewBox="0 0 24 26"
                   fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
+                  className="m-4"
                 >
                   <path
+                    d="M19 7.16602C19.9036 7.35336 20.5853 7.66604 21.1332 8.18788C22.5 9.4898 22.5 11.5852 22.5 15.776C22.5 19.9668 22.5 22.0622 21.1332 23.3641C19.7663 24.666 17.5664 24.666 13.1667 24.666H10.8333C6.43356 24.666 4.23367 24.666 2.86684 23.3641C1.5 22.0622 1.5 19.9668 1.5 15.776C1.5 11.5852 1.5 9.4898 2.86684 8.18788C3.41471 7.66604 4.09642 7.35336 5 7.16602"
+                    stroke="#C3C7D6"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M12.0295 1.33362L12 15.333M12.0295 1.33362C11.8398 1.32576 11.6489 1.39357 11.4789 1.53708C10.4213 2.42975 8.5 4.75001 8.5 4.75001M12.0295 1.33362C12.1996 1.34067 12.3689 1.40856 12.5213 1.53727C13.5786 2.4301 15.5 4.75001 15.5 4.75001"
+                    stroke="#C3C7D6"
+                    strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M7 16V12m0 0l5-5m-5 5h8m-3 4h3M5 12H4a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2v-1m0-6h3m0 0l-5 5m0-5v4"
-                  ></path>
+                  />
                 </svg>
+
                 <p className="mb-2 text-sm text-gray-400">
                   <span className="font-semibold">Click to upload</span> or drag
                   and drop
