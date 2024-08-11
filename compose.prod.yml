@@ -1,8 +1,8 @@
 version: "3"
 services:
-  Edison-client-prod:
-    container_name: Edison-client-prod
-    image: v3n0mhkr/Edison-client-prod
+  edison-client-prod:
+    container_name: edison-client-prod
+    image: v3n0mhkr/edison-client-prod
     env_file:
       - ./client/.env
     build:
@@ -10,14 +10,14 @@ services:
       dockerfile: Dockerfile
       target: production
     networks:
-      - Edison-prod
+      - edison-prod
     ports:
       - "80:80"
 
 
-  Edison-server-prod:
-    container_name: Edison-server-prod
-    image: v3n0mhkr/Edison-server-prod
+  edison-server-prod:
+    container_name: edison-server-prod
+    image: v3n0mhkr/edison-server-prod
     env_file:
       - ./server/.env
     build:
@@ -25,11 +25,11 @@ services:
       dockerfile: Dockerfile
       target: production
     networks:
-      - Edison-prod
+      - edison-prod
     ports:
       - 8000:8000
 
 networks:
-  Edison-prod:
-    name: Edison-prod
+  edison-prod:
+    name: edison-prod
     external: false
