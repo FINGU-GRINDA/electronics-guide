@@ -1,0 +1,35 @@
+version: "3"
+services:
+  electronics-guide-client-prod:
+    container_name: electronics-guide-client-prod
+    image: GRINDA/electronics-guide-client-prod
+    env_file:
+      - ./client/.env
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: production
+    networks:
+      - electronics-guide-prod
+    ports:
+      - "80:80"
+
+
+  electronics-guide-server-prod:
+    container_name: electronics-guide-server-prod
+    image: GRINDA/electronics-guide-server-prod
+    env_file:
+      - ./server/.env
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: production
+    networks:
+      - electronics-guide-prod
+    ports:
+      - 8000:8000
+
+networks:
+  electronics-guide-prod:
+    name: electronics-guide-prod
+    external: false
