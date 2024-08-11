@@ -1,8 +1,8 @@
-# Electronics Project Generator
+# Edison: The Creative Electronics Companion
 
 ## Project Overview
 
-Welcome to the Electronics Project Generator! This project is designed to assist users in creating exciting projects with various electronic parts. By utilizing advanced Language Models (LLMs) and the Gemini API, our system identifies electronic components from images and provides users with detailed, step-by-step project tutorials. Additionally, LangGraph is employed for multi-agent orchestration, ensuring an interactive and seamless user experience.
+Welcome to Edison: The Creative Electronics Companion! This project is designed to assist users in creating exciting projects with various electronic parts. By utilizing advanced Language Models (LLMs) and the Gemini API, our system identifies electronic components from images and provides users with detailed, step-by-step project tutorials. Additionally, LlamaIndex is employed for effective data management and retrieval, ensuring an interactive and seamless user experience.
 
 ## Core Features
 
@@ -23,9 +23,9 @@ Welcome to the Electronics Project Generator! This project is designed to assist
 
 ## Technology Stack
 
-### LangGraph
+### LlamaIndex
 
-- **Multi-agent orchestration**: Ensures smooth interaction between different components of the system.
+- **Data Management and Retrieval**: LlamaIndex allows the system to effectively manage and retrieve data, connecting various data sources (like documents and databases) to the LLMs. This integration ensures that the tutorials and project ideas are based on well-structured and easily accessible data.
 
 ### LLM (Language Model)
 
@@ -75,8 +75,8 @@ Welcome to the Electronics Project Generator! This project is designed to assist
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/FINGU-GRINDA/electronics-guide.git
-   cd your-repository
+   git clone https://github.com/MohamedMagdy097/Edison.git
+   cd Edison
    ```
 
 2. **Install dependencies**:
@@ -119,8 +119,3 @@ Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) fo
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Thanks to the developers of LangGraph and the Gemini API for their powerful tools.
-- Special thanks to the open-source community for their continuous support and contributions.
