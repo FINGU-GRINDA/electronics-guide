@@ -1,0 +1,42 @@
+version: "3"
+services:
+  electronics-guide-client-dev:
+    container_name: electronics-guide-client-dev
+    image: v3n0mhkr/electronics-guide-client-dev
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    working_dir: /app
+    env_file:
+      - ./client/.env
+    networks:
+      - electronics-guide-dev
+    ports:
+      - 4173:4173
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+      
+
+  electronics-guide-server-dev:
+    container_name: electronics-guide-server-dev
+    image: v3n0mhkr/electronics-guide-server-dev
+    env_file:
+      - ./server/.env
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: development
+    networks:
+      - electronics-guide-dev
+    ports:
+      - 8000:8000
+    volumes:
+      - ./server:/app
+
+
+networks:
+  electronics-guide-dev:
+    name: electronics-guide-dev
+    external: false

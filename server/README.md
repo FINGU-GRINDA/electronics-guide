@@ -1,5 +1,6 @@
 # Electronics Project Generator
-
+docker tag local-image:tagname new-repo:tagname
+docker push new-repo:tagname
 ## Project Overview
 
 Welcome to the Electronics Project Generator! This project is designed to assist users in creating exciting projects with various electronic parts. By utilizing advanced Language Models (LLMs) and the Gemini API, our system identifies electronic components from images and provides users with detailed, step-by-step project tutorials. Additionally, LangGraph is employed for multi-agent orchestration, ensuring an interactive and seamless user experience.
