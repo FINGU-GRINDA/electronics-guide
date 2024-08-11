@@ -5,7 +5,7 @@ export const analyzeImage = async (file: File) => {
   formData.append("file", file);
 
   const response = await axios.post(
-    "http://localhost:8000/api/v1/analyze_image/",
+    "https://edison-server.192.3.155.238.sslip.io/api/v1/analyze_image/",
     formData,
     {
       headers: { "Content-Type": "multipart/form-data" },
@@ -26,7 +26,7 @@ export const getProjectDetails = async (
   formData.append("project", project);
 
   const response = await fetch(
-    "http://localhost:8000/api/v1/project_details/",
+    "https://edison-server.192.3.155.238.sslip.io/api/v1/project_details/",
     {
       method: "POST",
       body: formData,
@@ -65,7 +65,7 @@ export const getProjectDetails = async (
 
 export const downloadTutorialPdf = async () => {
   const response = await axios.get(
-    "http://localhost:8000/api/v1/download_tutorial/",
+    "https://edison-server.192.3.155.238.sslip.io/api/v1/download_tutorial/",
     {
       responseType: "blob",
     }
