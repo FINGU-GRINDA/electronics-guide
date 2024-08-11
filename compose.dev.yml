@@ -1,8 +1,8 @@
 version: "3"
 services:
-  electronics-guide-client-dev:
-    container_name: electronics-guide-client-dev
-    image: v3n0mhkr/electronics-guide-client-dev
+  edison-client-dev:
+    container_name: edison-client-dev
+    image: v3n0mhkr/edison-client-dev
     build:
       context: ./client
       dockerfile: Dockerfile
@@ -11,7 +11,7 @@ services:
     env_file:
       - ./client/.env
     networks:
-      - electronics-guide-dev
+      - edison-dev
     ports:
       - 4173:4173
     volumes:
@@ -19,9 +19,9 @@ services:
       - /app/node_modules
       
 
-  electronics-guide-server-dev:
-    container_name: electronics-guide-server-dev
-    image: v3n0mhkr/electronics-guide-server-dev
+  edison-server-dev:
+    container_name: edison-server-dev
+    image: v3n0mhkr/edison-server-dev
     env_file:
       - ./server/.env
     build:
@@ -29,7 +29,7 @@ services:
       dockerfile: Dockerfile
       target: development
     networks:
-      - electronics-guide-dev
+      - edison-dev
     ports:
       - 8000:8000
     volumes:
@@ -37,6 +37,6 @@ services:
 
 
 networks:
-  electronics-guide-dev:
-    name: electronics-guide-dev
+  edison-dev:
+    name: edison-dev
     external: false
