@@ -11,6 +11,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
 import UploadPage from "./pages/UploadPage";
 import { motion } from "framer-motion";
+import logo from "./assets/logo.png";
 
 const theme = createTheme({
   palette: {
@@ -30,17 +31,17 @@ const theme = createTheme({
   typography: {
     fontFamily: [
       '"Bricolage Grotesque"',
-      '-apple-system',
-      'BlinkMacSystemFont',
+      "-apple-system",
+      "BlinkMacSystemFont",
       '"Segoe UI"',
-      'Roboto',
+      "Roboto",
       '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
+      "Arial",
+      "sans-serif",
       '"Apple Color Emoji"',
       '"Segoe UI Emoji"',
       '"Segoe UI Symbol"',
-    ].join(','),
+    ].join(","),
     h1: {
       fontSize: "3rem",
       fontWeight: 800,
@@ -83,8 +84,7 @@ const App: React.FC = () => {
       <CssBaseline />
       <AppBar position="sticky">
         <Toolbar>
-          <IconButton edge="start" color="inherit" aria-label="menu">
-            {/* <MenuIcon /> */}
+          {/* <IconButton edge="start" color="inherit" aria-label="menu">
             <svg
               width="30"
               height="30"
@@ -154,7 +154,8 @@ const App: React.FC = () => {
           </IconButton>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
             Edison
-          </Typography>
+          </Typography> */}
+          <img src={logo} alt="logo" width={250} />
         </Toolbar>
       </AppBar>
       <Box
@@ -174,11 +175,14 @@ const App: React.FC = () => {
         >
           <CustomContainer>
             <Typography variant="h1" align="center">
-              Creative Electronics Companion
+              Click. Upload. Innovate.
+              <br />
+              It's That Simple.
             </Typography>
             <Typography variant="h6" align="center" paragraph>
-              Upload your electronic component images to get project suggestions
-              and step-by-step guides.
+              Snap. Upload. Innovate. Let our AI analyze your Raspberry Pi
+              components and conjure up personalized project ideas with detailed
+              PDF guides.
             </Typography>
             <UploadPage />
           </CustomContainer>
