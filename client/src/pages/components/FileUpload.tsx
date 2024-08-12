@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { motion } from "framer-motion";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 interface FileUploadProps {
   onFileChange: (file: File | null) => void;
@@ -32,96 +34,174 @@ const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <form onSubmit={onAnalyzeImage} className="space-y-4">
       <Box
-        className="flex items-center justify-center w-full"
         sx={{
-          mb: 3,
-          padding: "16px",
-          backgroundColor: "#1c1c1c", // Updated background color to match the theme
-          borderRadius: 2,
-          border: "2px dashed #555", // Consistent with the rest of the dark theme
+          width: "100%",
+          maxWidth: 600,
+          margin: "0 auto",
+          position: "relative",
         }}
       >
-        <motion.label
-          whileHover={{
-            scale: 0.97, // Slightly smaller on hover
-            backgroundColor: "#2a2a2a", // Darker shade of black for hover effect
+        {/* Vertical line */}
+        <Box
+          sx={{
+            position: "absolute",
+            left: 24, // Moved to the right
+            top: 164,
+            bottom: 85,
+            width: 2,
+            backgroundColor: "#e2e8f0",
           }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-col items-center justify-center w-full h-32 cursor-pointer rounded-lg"
-          style={{ backgroundColor: "#1c1c1c" }} // Match the initial background color
-        >
-          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-            {preview ? (
-              <img
-                src={preview}
-                alt="Preview"
-                className="mb-3 w-24 h-24 object-cover"
-                style={{
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-                }}
-              />
-            ) : (
-              <>
-                <svg
-                  width="24"
-                  height="26"
-                  viewBox="0 0 24 26"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="m-4"
-                >
-                  <path
-                    d="M19 7.16602C19.9036 7.35336 20.5853 7.66604 21.1332 8.18788C22.5 9.4898 22.5 11.5852 22.5 15.776C22.5 19.9668 22.5 22.0622 21.1332 23.3641C19.7663 24.666 17.5664 24.666 13.1667 24.666H10.8333C6.43356 24.666 4.23367 24.666 2.86684 23.3641C1.5 22.0622 1.5 19.9668 1.5 15.776C1.5 11.5852 1.5 9.4898 2.86684 8.18788C3.41471 7.66604 4.09642 7.35336 5 7.16602"
-                    stroke="#C3C7D6"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M12.0295 1.33362L12 15.333M12.0295 1.33362C11.8398 1.32576 11.6489 1.39357 11.4789 1.53708C10.4213 2.42975 8.5 4.75001 8.5 4.75001M12.0295 1.33362C12.1996 1.34067 12.3689 1.40856 12.5213 1.53727C13.5786 2.4301 15.5 4.75001 15.5 4.75001"
-                    stroke="#C3C7D6"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+        />
 
-                <p className="mb-2 text-sm text-gray-400">
-                  <span className="font-semibold">Click to upload</span> or drag
-                  and drop
-                </p>
-                <p className="text-xs text-gray-400">
-                  SVG, PNG, JPG or GIF (MAX. 800x400px)
-                </p>
-              </>
-            )}
-          </div>
-          <input
-            id="dropzone-file"
-            type="file"
-            className="hidden"
-            onChange={(e) => {
-              const files = (e.target as HTMLInputElement).files;
-              onFileChange(files ? files[0] : null);
+        {/* Your old upload button design */}
+        <Box
+          className="flex items-center justify-center w-full"
+          sx={{
+            mb: 3,
+            padding: "16px",
+            backgroundColor: "#1c1c1c",
+            borderRadius: 2,
+            border: "2px dashed #555",
+          }}
+        >
+          <motion.label
+            whileHover={{
+              scale: 0.97,
+              backgroundColor: "#2a2a2a",
             }}
-          />
-        </motion.label>
+            transition={{ duration: 0.3 }}
+            className="flex flex-col items-center justify-center w-full h-32 cursor-pointer rounded-lg"
+            style={{ backgroundColor: "#1c1c1c" }}
+          >
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="mb-3 w-24 h-24 object-cover"
+                  style={{
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                  }}
+                />
+              ) : (
+                <>
+                  <CloudUploadIcon sx={{ color: "white", fontSize: 40 }} />
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "white", fontWeight: "bold", mt: 2 }}
+                  >
+                    Click to upload or drag and drop
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: "#94a3b8" }}>
+                    SVG, PNG, JPG or GIF (MAX. 800x400px)
+                  </Typography>
+                </>
+              )}
+            </div>
+            <input
+              id="dropzone-file"
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const files = (e.target as HTMLInputElement).files;
+                onFileChange(files ? files[0] : null);
+              }}
+            />
+          </motion.label>
+        </Box>
+
+        {/* Rest of your original design */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1, ml: 6 }}>
+          <InfoOutlinedIcon sx={{ mr: 1, fontSize: 16, color: "#64748b" }} />
+          <Typography variant="caption" sx={{ color: "#64748b" }}>
+            Upload tips
+          </Typography>
+        </Box>
+
+        <Typography
+          variant="body2"
+          sx={{ mb: 3, pl: 1, color: "#64748b", ml: 6 }}
+        >
+          No image? Try one of the demo images:
+        </Typography>
+
+        <Box sx={{ position: "relative", pl: 6, mb: 2, mt: 4 }}>
+          <Box
+            sx={{
+              position: "absolute",
+              left: 12,
+              top: -2,
+              width: 24,
+              height: 24,
+              borderRadius: "50%",
+              backgroundColor: "white",
+              border: "1px solid #000000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 2,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: "bold", color: "#4a5568" }}
+            >
+              2
+            </Typography>
+          </Box>
+          <Typography variant="body1" sx={{ color: "#2d3748", ml: 2 }}>
+            Choose from component cards
+          </Typography>
+        </Box>
+
+        <Box sx={{ position: "relative", pl: 6, mt: 12 }}>
+          <Box
+            sx={{
+              position: "absolute",
+              left: 12,
+              width: 24,
+              height: 24,
+
+              borderRadius: "50%",
+              backgroundColor: "white",
+              border: "1px solid #000000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 2,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: "bold", color: "#4a5568" }}
+            >
+              3
+            </Typography>
+          </Box>
+          <Typography variant="body1" sx={{ color: "#2d3748", ml: 2 }}>
+            Place components in the circuit
+          </Typography>
+        </Box>
+
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          disabled={!file || loading}
+          sx={{
+            mt: 6, // Added margin top to the button to create more space
+
+            backgroundColor: "#00bfa5",
+            "&:hover": {
+              backgroundColor: "#00897b",
+            },
+          }}
+        >
+          Upload
+        </Button>
       </Box>
-      <Button
-        type="submit"
-        variant="contained"
-        color="primary"
-        fullWidth
-        disabled={!file || loading}
-        sx={{
-          backgroundColor: "#00bfa5", // Matching with the primary color in the theme
-          "&:hover": {
-            backgroundColor: "#00897b", // Consistent hover effect
-          },
-        }}
-      >
-        Upload
-      </Button>
     </form>
   );
 };

@@ -15,3 +15,9 @@ body {
   page-break-before: always;
   break-before: always;
 }
+.react-before-slider__image {
+  height: 100% !important;
+  width: 100% !important;
+  object-fit: cover !important;
+  object-position: center center !important; /* Adjusts the image to show the center */
+}
