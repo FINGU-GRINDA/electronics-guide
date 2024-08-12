@@ -1,19 +1,19 @@
-import React from 'react';
+import React from "react";
 import {
-	AppBar,
-	Toolbar,
-	CssBaseline,
-	Typography,
-	Box,
-	IconButton,
+  AppBar,
+  Toolbar,
+  CssBaseline,
+  Typography,
+  Box,
+  IconButton,
   Container,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
-import UploadPage from './pages/UploadPage';
-import { motion } from 'framer-motion';
-import logo from "./assets/darkLogo.png";
-import { Background } from './pages/components/Background';
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
+import UploadPage from "./pages/UploadPage";
+import { motion } from "framer-motion";
+import logo from "./assets/logoz.png";
+import { Background } from "./pages/components/Background";
 import { BoxesCore } from './ui/background-boxes';
 import { BackgroundBoxes } from './pages/components/Background2';
 import { Background3 } from './pages/components/Background3';

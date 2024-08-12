@@ -1,10 +1,12 @@
+// myfile.tsx
 import React, { useState, useEffect } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import components1 from "../../assets/raspberrypi_kit.png";
 import components2 from "../../assets/Raspberry_Pi_4_Model_B_-_Side.jpg";
+import { HoverBorderGradient } from "../../components/ui/hover-border-gradient";
 
 interface FileUploadProps {
   onFileChange: (file: File | null) => void;
@@ -37,7 +39,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     try {
       const response = await fetch(imageSrc);
       const blob = await response.blob();
-  
+
       const file = new File([blob], "sample-image.png", { type: blob.type });
       onFileChange(file);
     } catch (error) {
@@ -60,15 +62,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
         <Box
           sx={{
             position: "absolute",
-            left: 24, // Moved to the right
+            left: 24,
             top: 164,
             bottom: 85,
-            width: 2,
+            width: 1.2,
             backgroundColor: "#e2e8f0",
           }}
         />
 
-        {/* Your old upload button design */}
+        {/* Upload area */}
         <Box
           className="flex items-center justify-center w-full"
           sx={{
@@ -161,6 +163,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
             height={50}
           />
         </div>
+
+        {/* Steps */}
         <Box sx={{ position: "relative", pl: 6, mb: 2, mt: 4 }}>
           <Box
             sx={{
@@ -171,7 +175,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
               height: 24,
               borderRadius: "50%",
               backgroundColor: "white",
-              // border: "1px solid #000000",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -200,10 +203,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
               left: 12,
               width: 24,
               height: 24,
-
               borderRadius: "50%",
               backgroundColor: "white",
-              // border: "1px solid #000000",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -225,23 +226,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
           </Typography>
         </Box>
 
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          disabled={!file || loading}
-          sx={{
-            mt: 6, // Added margin top to the button to create more space
-
-            backgroundColor: "#00bfa5",
-            "&:hover": {
-              backgroundColor: "#00897b",
-            },
-          }}
+        <HoverBorderGradient
+          containerClassName="rounded-full mt-6 w-full"
+          as="button"
+          className="dark:bg-black bg-white text-black dark:text-white flex items-center justify-center space-x-2 w-full py-2"
         >
-          Upload
-        </Button>
+          <button type="submit" disabled={!file || loading} className="w-full h-full">Upload</button>
+        </HoverBorderGradient>
       </Box>
     </form>
   );

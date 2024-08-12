@@ -7,10 +7,7 @@ import ComponentList from "./components/ComponentList";
 import ProjectIdeasList from "./components/ProjectIdeasList";
 import ProjectTutorial from "./components/ProjectTutorial";
 import { motion } from "framer-motion";
-import ReactBeforeSliderComponent from "react-before-after-slider-component";
-import "react-before-after-slider-component/dist/build.css";
-import robot from "../assets/raspberrypi_robot.jpg";
-import electronic from "../assets/raspberrypi_kit.png";
+import robot from "../assets/Bot.webp";
 
 const UploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -22,14 +19,6 @@ const UploadPage: React.FC = () => {
   const [ideasLoading, setIdeasLoading] = useState<boolean>(false);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
-
-  const FIRST_IMAGE = {
-    imageUrl: robot,
-  };
-
-  const SECOND_IMAGE = {
-    imageUrl: electronic,
-  };
 
   const handleFileChange = (file: File | null) => {
     setFile(file);
@@ -154,22 +143,24 @@ const UploadPage: React.FC = () => {
         </Box>
         <Divider orientation="vertical" flexItem />
 
-        {/* Right side: Before and After Image Slider */}
-        <Box
-          sx={{
-            flex: 2,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "400px", // Fixed height for both images
-            overflow: "clip", // Ensures the images fit within the container
+        {/* Right side: Before and After Image */}
+        <img
+          src={robot}
+          alt="robot"
+          style={{
+            maxWidth: "400px", // Fixed width
+            height: "460px", // Maintain aspect ratio
+            borderRadius: "50px", // Curved corners
+            boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.3)", // Shadow effect
+            transition: "transform 0.3s ease",
           }}
-        >
-          <ReactBeforeSliderComponent
-            firstImage={FIRST_IMAGE}
-            secondImage={SECOND_IMAGE}
-          />
-        </Box>
+          // onMouseOver={(e) => {
+          //   (e.currentTarget as HTMLElement).style.transform = "scale(1.05)";
+          // }}
+          // onMouseOut={(e) => {
+          //   (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+          // }}
+        />
       </Box>
     </motion.div>
   );
