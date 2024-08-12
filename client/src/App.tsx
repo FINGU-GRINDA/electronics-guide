@@ -6,6 +6,7 @@ import {
   Typography,
   Box,
   IconButton,
+  Container,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
@@ -160,12 +161,12 @@ const App: React.FC = () => {
       </AppBar>
       <Box
         sx={{
-          backgroundColor: "#0d0d0d", // Updated to a deeper black
+          backgroundColor: "#0d0d0d",
           minHeight: "100vh",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          padding: "40px 0",
+          padding: "40px 20px",
         }}
       >
         <motion.div
