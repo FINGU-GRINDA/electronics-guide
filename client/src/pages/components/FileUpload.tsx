@@ -63,7 +63,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             left: 24, // Moved to the right
             top: 164,
             bottom: 85,
-            width: 2,
+            width: 1.2,
             backgroundColor: "#e2e8f0",
           }}
         />
