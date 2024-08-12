@@ -14,6 +14,9 @@ import UploadPage from './pages/UploadPage';
 import { motion } from 'framer-motion';
 import logo from "./assets/darkLogo.png";
 import { Background } from './pages/components/Background';
+import { BoxesCore } from './ui/background-boxes';
+import { BackgroundBoxes } from './pages/components/Background2';
+import { Background3 } from './pages/components/Background3';
 
 const theme = createTheme({
 	palette: {
@@ -57,36 +60,38 @@ const theme = createTheme({
 			color: '#b0b0b0',
 		},
 	},
-	components: {
-		MuiAppBar: {
-			styleOverrides: {
-				root: {
-					backgroundColor: '#1c1c1c',
-					boxShadow: 'none',
-					borderBottom: '1px solid #333',
-				},
-			},
-		},
-	},
+	// components: {
+	// 	MuiAppBar: {
+	// 		styleOverrides: {
+	// 			root: {
+	// 				backgroundColor: '#1c1c1c',
+	// 				boxShadow: 'none',
+	// 				borderBottom: '1px solid #333',
+	// 			},
+	// 		},
+	// 	},
+	// },
 });
 
 const CustomContainer = styled(Box)({
 	padding: '40px',
-	backgroundColor: '#1c1c1c', // Consistent with the app's overall theme
+	backgroundColor: '#1c1c1caa', // Consistent with the app's overall theme
 	borderRadius: '16px',
 	boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
 	maxWidth: '900px',
 	width: '100%',
 	margin: 'auto',
+	backdropFilter: 'blur(10px)',
 });
 
 const App: React.FC = () => {
 	return (
 		<ThemeProvider theme={theme}>
 			<CssBaseline />
-			<Background />
+			{/* <Background /> */}
+			
 			<AppBar position='sticky'>
-				<Toolbar>
+				<Toolbar className=' bg-black'>
 					{/* <IconButton edge="start" color="inherit" aria-label="menu">
             <svg
               width="30"
@@ -165,6 +170,7 @@ const App: React.FC = () => {
 					/>
 				</Toolbar>
 			</AppBar>
+			<Background3/>
 			<Box
 				sx={{
 					// backgroundColor: "#0d0d0d", // Updated to a deeper black
@@ -173,10 +179,12 @@ const App: React.FC = () => {
 					alignItems: 'center',
 					justifyContent: 'center',
 					padding: '40px 0',
-					opacity: 0.9,
 				}}
 			>
+				{/* <BackgroundBoxes/> */}
+				
 				<motion.div
+					// className='backdrop-blur-md bg-opacity-0 bg-red-300'
 					initial={{ opacity: 0, scale: 0.95 }}
 					animate={{ opacity: 1, scale: 1 }}
 					transition={{ duration: 0.8 }}
