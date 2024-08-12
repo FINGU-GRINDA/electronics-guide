@@ -28,63 +28,26 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
 
   const handleDownloadPDF = async () => {
     if (tutorialRef.current) {
+      const formData = new FormData();
+      formData.append("markdown", tutorial.trim());
+
       // Temporarily remove the overflow restriction and expand the element to fit all content
-      const originalHeight = tutorialRef.current.style.height;
-      tutorialRef.current.style.height = "auto";
-      tutorialRef.current.style.maxHeight = "none";
-      tutorialRef.current.style.overflowY = "visible";
+      const pdf = await fetch("https://md-to-pdf.fly.dev",{
+        method: "POST",
+        body:formData
+      })
 
-      // Use html2canvas to capture the entire area
-      const canvas = await html2canvas(tutorialRef.current, {
-        scale: 1.5, // Reduced scale for smaller file size
-        useCORS: true,
-      });
+      const pdfBlob = await pdf.blob();
 
-      // Restore the original styles
-      tutorialRef.current.style.height = originalHeight;
-      tutorialRef.current.style.maxHeight = "700px";
-      tutorialRef.current.style.overflowY = "auto";
-
-      // Convert to JPEG format for smaller file size
-      const imgData = canvas.toDataURL("image/jpeg", 0.75); // 0.75 is the quality level (0 to 1)
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(
-        imgData,
-        "JPEG",
-        0,
-        position,
-        imgWidth,
-        imgHeight,
-        undefined,
-        "FAST"
-      ); // 'FAST' for compression
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(
-          imgData,
-          "JPEG",
-          0,
-          position,
-          imgWidth,
-          imgHeight,
-          undefined,
-          "FAST"
-        );
-        heightLeft -= pageHeight;
+      if (!window) {
+        return;
       }
-
-      pdf.save("tutorial.pdf");
+      const blobUrl = window.URL.createObjectURL(pdfBlob);
+      const anchor = window.document.createElement('a');
+      anchor.download = "tutorial.pdf";
+      anchor.href = blobUrl;
+      anchor.click();
+      window.URL.revokeObjectURL(blobUrl);
     }
   };
 
