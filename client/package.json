@@ -20,7 +20,7 @@
     "axios": "^1.7.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "framer-motion": "^11.3.21",
+    "framer-motion": "^11.3.24",
     "html-react-parser": "^5.1.12",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.2",
@@ -39,7 +39,7 @@
     "react-zoom-pan-pinch": "^3.6.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",
-    "tailwind-merge": "^2.5.0",
+    "tailwind-merge": "^2.5.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
