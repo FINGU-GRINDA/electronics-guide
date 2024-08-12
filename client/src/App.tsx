@@ -184,9 +184,8 @@ const App: React.FC = () => {
               It's That Simple.
             </Typography>
             <Typography variant="h6" align="center" paragraph>
-              Snap. Upload. Innovate. Let our AI analyze your Raspberry Pi
-              components and conjure up personalized project ideas with detailed
-              PDF guides.
+              Let our AI analyze your Raspberry Pi components and conjure up
+              personalized project ideas with detailed PDF guides.
             </Typography>
             <UploadPage />
           </CustomContainer>

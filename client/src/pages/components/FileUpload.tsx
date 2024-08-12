@@ -37,7 +37,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     try {
       const response = await fetch(imageSrc);
       const blob = await response.blob();
-  
+
       const file = new File([blob], "sample-image.png", { type: blob.type });
       onFileChange(file);
     } catch (error) {
