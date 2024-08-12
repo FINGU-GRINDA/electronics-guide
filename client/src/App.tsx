@@ -6,6 +6,7 @@ import {
   Typography,
   Box,
   IconButton,
+  Container,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
@@ -30,17 +31,17 @@ const theme = createTheme({
   typography: {
     fontFamily: [
       '"Bricolage Grotesque"',
-      '-apple-system',
-      'BlinkMacSystemFont',
+      "-apple-system",
+      "BlinkMacSystemFont",
       '"Segoe UI"',
-      'Roboto',
+      "Roboto",
       '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
+      "Arial",
+      "sans-serif",
       '"Apple Color Emoji"',
       '"Segoe UI Emoji"',
       '"Segoe UI Symbol"',
-    ].join(','),
+    ].join(","),
     h1: {
       fontSize: "3rem",
       fontWeight: 800,
@@ -159,30 +160,30 @@ const App: React.FC = () => {
       </AppBar>
       <Box
         sx={{
-          backgroundColor: "#0d0d0d", // Updated to a deeper black
+          backgroundColor: "#0d0d0d",
           minHeight: "100vh",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          padding: "40px 0",
+          padding: "40px 20px",
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-        >
-          <CustomContainer>
-            <Typography variant="h1" align="center">
-              Creative Electronics Companion
+        <Container maxWidth="lg">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <Typography variant="h1" align="center" sx={{ mb: 2 }}>
+              Click. Upload. Innovate. It's That Simple.{" "}
             </Typography>
-            <Typography variant="h6" align="center" paragraph>
-              Upload your electronic component images to get project suggestions
-              and step-by-step guides.
-            </Typography>
-            <UploadPage />
-          </CustomContainer>
-        </motion.div>
+            {/* <Typography variant="h6" align="center" paragraph>
+              Generate AI electronic component models for project suggestions.
+              Upload component images and get project ideas with ease!
+            </Typography> */}
+          </motion.div>
+          <UploadPage />
+        </Container>
       </Box>
     </ThemeProvider>
   );
