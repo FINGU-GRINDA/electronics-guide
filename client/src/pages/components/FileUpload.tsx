@@ -47,7 +47,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             position: "absolute",
             left: 24, // Moved to the right
             top: 164,
-            bottom: 50,
+            bottom: 85,
             width: 2,
             backgroundColor: "#e2e8f0",
           }}
@@ -155,13 +155,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
           </Typography>
         </Box>
 
-        <Box sx={{ position: "relative", pl: 6, mt: 4 }}>
+        <Box sx={{ position: "relative", pl: 6, mt: 12 }}>
           <Box
             sx={{
               position: "absolute",
               left: 12,
               width: 24,
               height: 24,
+
               borderRadius: "50%",
               backgroundColor: "white",
               border: "1px solid #000000",
@@ -190,6 +191,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
           fullWidth
           disabled={!file || loading}
           sx={{
+            mt: 6, // Added margin top to the button to create more space
+
             backgroundColor: "#00bfa5",
             "&:hover": {
               backgroundColor: "#00897b",
