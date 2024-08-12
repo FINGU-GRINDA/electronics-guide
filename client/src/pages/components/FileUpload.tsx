@@ -3,6 +3,8 @@ import { Box, Button, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import components1 from "../../assets/raspberrypi_kit.png";
+import components2 from "../../assets/Raspberry_Pi_4_Model_B_-_Side.jpg";
 
 interface FileUploadProps {
   onFileChange: (file: File | null) => void;
@@ -31,11 +33,24 @@ const FileUpload: React.FC<FileUploadProps> = ({
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
 
+  const handleSampleImageClick = async (imageSrc: string) => {
+    try {
+      const response = await fetch(imageSrc);
+      const blob = await response.blob();
+  
+      const file = new File([blob], "sample-image.png", { type: blob.type });
+      onFileChange(file);
+    } catch (error) {
+      console.error("Error uploading sample image:", error);
+    }
+  };
+
   return (
     <form onSubmit={onAnalyzeImage} className="space-y-4">
       <Box
         sx={{
           width: "100%",
+          height: "100%",
           maxWidth: 600,
           margin: "0 auto",
           position: "relative",
@@ -126,6 +141,26 @@ const FileUpload: React.FC<FileUploadProps> = ({
           No image? Try one of the demo images:
         </Typography>
 
+        <div className="flex justify-center gap-4">
+          <img
+            onClick={() => handleSampleImageClick(components1)}
+            title="raspberry pi kit"
+            className="cursor-pointer"
+            src={components1}
+            alt="components1"
+            width={50}
+            height={50}
+          />
+          <img
+            onClick={() => handleSampleImageClick(components2)}
+            title="raspberry pi only"
+            className="cursor-pointer"
+            src={components2}
+            alt="components1"
+            width={50}
+            height={50}
+          />
+        </div>
         <Box sx={{ position: "relative", pl: 6, mb: 2, mt: 4 }}>
           <Box
             sx={{
@@ -136,7 +171,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
               height: 24,
               borderRadius: "50%",
               backgroundColor: "white",
-              border: "1px solid #000000",
+              // border: "1px solid #000000",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -150,8 +185,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
               2
             </Typography>
           </Box>
-          <Typography variant="body1" sx={{ color: "#2d3748", ml: 2 }}>
-            Choose from component cards
+          <Typography
+            variant="body1"
+            sx={{ color: "rgba(255,255,255, 0.5)", ml: 2 }}
+          >
+            Choose from project ideas
           </Typography>
         </Box>
 
@@ -165,7 +203,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
               borderRadius: "50%",
               backgroundColor: "white",
-              border: "1px solid #000000",
+              // border: "1px solid #000000",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -179,8 +217,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
               3
             </Typography>
           </Box>
-          <Typography variant="body1" sx={{ color: "#2d3748", ml: 2 }}>
-            Place components in the circuit
+          <Typography
+            variant="body1"
+            sx={{ color: "rgba(255,255,255, 0.5)", ml: 2 }}
+          >
+            Generate your tutorial!
           </Typography>
         </Box>
 
