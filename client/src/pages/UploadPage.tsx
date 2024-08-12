@@ -9,9 +9,7 @@ import ProjectTutorial from "./components/ProjectTutorial";
 import { motion } from "framer-motion";
 import ReactBeforeSliderComponent from "react-before-after-slider-component";
 import "react-before-after-slider-component/dist/build.css";
-import robot from "../assets/raspberrypi_robot.jpg";
-import electronic from "../assets/raspberrypi_kit.png";
-
+import robot from "../assets/Bot.webp";
 const UploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [components, setComponents] = useState<string[]>([]);
@@ -22,14 +20,6 @@ const UploadPage: React.FC = () => {
   const [ideasLoading, setIdeasLoading] = useState<boolean>(false);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
-
-  const FIRST_IMAGE = {
-    imageUrl: robot,
-  };
-
-  const SECOND_IMAGE = {
-    imageUrl: electronic,
-  };
 
   const handleFileChange = (file: File | null) => {
     setFile(file);
@@ -165,10 +155,7 @@ const UploadPage: React.FC = () => {
             overflow: "clip", // Ensures the images fit within the container
           }}
         >
-          <ReactBeforeSliderComponent
-            firstImage={FIRST_IMAGE}
-            secondImage={SECOND_IMAGE}
-          />
+          <img src={robot} alt="robot" />
         </Box>
       </Box>
     </motion.div>

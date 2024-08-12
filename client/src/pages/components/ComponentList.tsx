@@ -12,7 +12,7 @@ const ComponentList: React.FC<ComponentListProps> = ({ components }) => {
       sx={{
         mb: 4,
         mx: "auto",
-        maxWidth: 800,
+        width: "100%", // Set the width to 100% to make it as wide as possible
         padding: 3,
         backgroundColor: "#1e1e1e",
         borderRadius: "16px",
