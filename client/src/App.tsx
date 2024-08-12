@@ -28,6 +28,19 @@ const theme = createTheme({
     },
   },
   typography: {
+    fontFamily: [
+      '"Bricolage Grotesque"',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(','),
     h1: {
       fontSize: "3rem",
       fontWeight: 800,
