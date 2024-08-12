@@ -12,6 +12,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
 import UploadPage from "./pages/UploadPage";
 import { motion } from "framer-motion";
+import logo from "./assets/logo.png";
 
 const theme = createTheme({
   palette: {
@@ -84,8 +85,7 @@ const App: React.FC = () => {
       <CssBaseline />
       <AppBar position="sticky">
         <Toolbar>
-          <IconButton edge="start" color="inherit" aria-label="menu">
-            {/* <MenuIcon /> */}
+          {/* <IconButton edge="start" color="inherit" aria-label="menu">
             <svg
               width="30"
               height="30"
@@ -155,7 +155,8 @@ const App: React.FC = () => {
           </IconButton>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
             Edison
-          </Typography>
+          </Typography> */}
+          <img src={logo} alt="logo" width={250} />
         </Toolbar>
       </AppBar>
       <Box
@@ -168,22 +169,25 @@ const App: React.FC = () => {
           padding: "40px 20px",
         }}
       >
-        <Container maxWidth="lg">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Typography variant="h1" align="center" sx={{ mb: 2 }}>
-              Click. Upload. Innovate. It's That Simple.{" "}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <CustomContainer>
+            <Typography variant="h1" align="center">
+              Click. Upload. Innovate.
+              <br />
+              It's That Simple.
             </Typography>
-            {/* <Typography variant="h6" align="center" paragraph>
-              Generate AI electronic component models for project suggestions.
-              Upload component images and get project ideas with ease!
-            </Typography> */}
-          </motion.div>
-          <UploadPage />
-        </Container>
+            <Typography variant="h6" align="center" paragraph>
+              Snap. Upload. Innovate. Let our AI analyze your Raspberry Pi
+              components and conjure up personalized project ideas with detailed
+              PDF guides.
+            </Typography>
+            <UploadPage />
+          </CustomContainer>
+        </motion.div>
       </Box>
     </ThemeProvider>
   );
