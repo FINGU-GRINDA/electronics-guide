@@ -12,10 +12,11 @@ interface ProjectTutorialProps {
 const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
   const [tutorialContent, setTutorialContent] = useState("");
   const tutorialRef = useRef<HTMLDivElement>(null);
+  const [autoscroll, setAutoscroll] = useState(true);
 
   useEffect(() => {
     setTutorialContent(tutorial);
-    if (!tutorialRef.current) {
+    if (!tutorialRef.current || !autoscroll) {
       return;
     } else {
       const scrollBarHeight = tutorialRef.current.scrollHeight;
@@ -32,10 +33,10 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
       formData.append("markdown", tutorial.trim());
 
       // Temporarily remove the overflow restriction and expand the element to fit all content
-      const pdf = await fetch("https://md-to-pdf.fly.dev",{
+      const pdf = await fetch("https://md-to-pdf.fly.dev", {
         method: "POST",
-        body:formData
-      })
+        body: formData,
+      });
 
       const pdfBlob = await pdf.blob();
 
@@ -43,7 +44,7 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
         return;
       }
       const blobUrl = window.URL.createObjectURL(pdfBlob);
-      const anchor = window.document.createElement('a');
+      const anchor = window.document.createElement("a");
       anchor.download = "tutorial.pdf";
       anchor.href = blobUrl;
       anchor.click();
@@ -52,7 +53,7 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
   };
 
   return (
-    <Card variant="outlined" sx={{ backgroundColor: "#2c2c2c" }}>
+    <Card className="relative" variant="outlined" sx={{ backgroundColor: "#2c2c2c" }}>
       <CardContent>
         <Typography variant="h6" gutterBottom sx={{ color: "#00bfa5" }}>
           Project Tutorial
@@ -79,6 +80,22 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ tutorial }) => {
             {tutorialContent}
           </ReactMarkdown>
         </Box>
+        <Button
+            onClick={() => setAutoscroll(!autoscroll)}
+            sx={{
+              color: "#000",
+              position: "absolute",
+              bottom: "100px",
+              right: "50px",
+              marginTop: "16px",
+              backgroundColor: "rgba(255, 255, 255, 0.5)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.8)",
+              },
+            }}
+          >
+            Scroll: <p style={{textDecoration: autoscroll? "none" : "line-through",}}>{" "} auto</p>
+          </Button>
         <Button
           variant="contained"
           color="primary"
